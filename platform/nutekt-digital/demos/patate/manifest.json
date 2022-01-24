@@ -6,12 +6,11 @@
         "api" : "1.1-0",
         "dev_id" : 0,
         "prg_id" : 0,
-        "version" : "3.98-0",
+        "version" : "4.00-0",
         "name" : "patate",
-        "num_param" : 2,
+        "num_param" : 1,
         "params" : [
-            ["Wavetable",      0,  8,  ""],
-            ["Unused",    0, 100, "%"]
+            ["Wavetable",      0,  8,  ""]
           ]
     }
 }
