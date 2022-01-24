@@ -1,15 +1,21 @@
 #include "userosc.h"
 
+#include <vector>
+#include <array>
+
 struct State {
   bool is_on = false;
+
+  const float* wave0 = wavesC[0];
+  float phi0 = 0.f;
+  float w00 = 440.f * k_samplerate_recipf;
 };
 
 State state;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
- // (void)platform;
-  // (void)api;
+  state = State();
 }
 
 void OSC_CYCLE(
@@ -20,10 +26,15 @@ void OSC_CYCLE(
 
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
+  for (; yy < yy_end; yy++) {
+    const float sig = !state.is_on ? osc_white() : osc_wave_scanf(state.wave0, state.phi0);
+    // sig += ;
 
-  for (size_t kk=0; kk<frames; kk++) {
-    const float sig = state.is_on ? osc_white() : 0.f;
-    yy[kk] = f32_to_q31(sig);
+
+    *yy = f32_to_q31(sig);
+
+    state.phi0 += state.w00;
+    state.phi0 -= static_cast<uint32_t>(state.phi0);
   }
 
 }
