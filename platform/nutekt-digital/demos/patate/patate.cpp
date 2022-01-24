@@ -5,6 +5,7 @@
 
 struct State {
   bool is_on = false;
+  bool is_disto = false;
 
   float vol0 = 1.f;
   size_t index0 = 0;
@@ -39,6 +40,7 @@ void OSC_CYCLE(
     float sig = !state.is_on ? osc_white() : osc_wave_scanf(wave0, state.phi0);
     sig *= state.vol0;
 
+    if (state.is_disto) sig = osc_sat_schetzenf(sig);
     *yy = f32_to_q31(sig);
 
     state.phi0 += w0;
@@ -74,7 +76,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     state.vol0 = clip01f(value * 0.01f);
     break;
   case k_user_osc_param_shiftshape:
-    // state.vol0 = clip01f(value * 0.01f);
+    state.is_disto = value % 2 != 0;
     break;
   }
 }
