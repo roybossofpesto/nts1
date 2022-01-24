@@ -5,7 +5,8 @@
 
 struct State {
   bool is_on = false;
-  bool is_disto = false;
+
+  float disto_amount = 1.f;
 
   float vol0 = 1.f;
   size_t index0 = 0;
@@ -37,10 +38,12 @@ void OSC_CYCLE(
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
   for (; yy < yy_end; yy++) {
-    float sig = !state.is_on ? osc_white() : osc_wave_scanf(wave0, state.phi0);
-    sig *= state.vol0;
+    float sig = 0.f;
+    if (state.is_on) sig += state.vol0 * osc_wave_scanf(wave0, state.phi0);
 
-    if (state.is_disto) sig = osc_sat_schetzenf(sig);
+    sig = osc_softclipf(0.0f, state.disto_amount * sig);
+
+    // sig = osc_sat_schetzenf(state.disto_amount * sig);
     *yy = f32_to_q31(sig);
 
     state.phi0 += w0;
@@ -70,13 +73,13 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     state.index0 = value % 4;
     break;
   case k_user_osc_param_id2:
-    // state.index0 = value % 4;
+    state.disto_amount = 1 + param_val_to_f32(value);
     break;
   case k_user_osc_param_shape:
     state.vol0 = clip01f(value * 0.01f);
     break;
   case k_user_osc_param_shiftshape:
-    state.is_disto = value % 2 != 0;
+    state.disto_amount = 1 + 4.f * param_val_to_f32(value);
     break;
   }
 }
