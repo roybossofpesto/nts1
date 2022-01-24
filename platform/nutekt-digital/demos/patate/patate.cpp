@@ -8,7 +8,6 @@ struct State {
 
   const float* wave0 = wavesC[0];
   float phi0 = 0.f;
-  float w00 = 440.f * k_samplerate_recipf;
 };
 
 State state;
@@ -24,6 +23,10 @@ void OSC_CYCLE(
   const uint32_t frames)
 {
 
+  const auto w0 = osc_w0f_for_note(
+    (params->pitch)>>8,
+    params->pitch & 0xFF);
+
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
   for (; yy < yy_end; yy++) {
@@ -33,7 +36,7 @@ void OSC_CYCLE(
 
     *yy = f32_to_q31(sig);
 
-    state.phi0 += state.w00;
+    state.phi0 += w0;
     state.phi0 -= static_cast<uint32_t>(state.phi0);
   }
 
