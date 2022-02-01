@@ -47,7 +47,7 @@ void OSC_CYCLE(
   for (; yy < yy_end; yy++) {
     float sig = 0.f;
 
-    const Item& item = hosho_items[state.index % 3];
+    const Item& item = hosho_items[state.index % std::tuple_size<Items>::value];
     const bool is_on = state.time < item.gate_hold.count();
     const float vol =
       is_on ? item.vol * attack_shape(state.time, item.gate_attack.count()) :
