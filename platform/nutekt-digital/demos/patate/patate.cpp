@@ -19,34 +19,16 @@ void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 
 const float* get_wavetable(size_t index)
 {
-  static const uint8_t k_a_thr = k_waves_a_cnt;
-  static const uint8_t k_b_thr = k_a_thr + k_waves_b_cnt;
-  static const uint8_t k_c_thr = k_b_thr + k_waves_c_cnt;
-  static const uint8_t k_d_thr = k_c_thr + k_waves_d_cnt;
 
-  const float * const * table;
-
-  if (index < k_a_thr) {
-    table = wavesA;
+  switch (index % 6) {
+    case 0: return wavesA[0];
+    case 1: return wavesB[0];
+    case 2: return wavesC[0];
+    case 3: return wavesD[0];
+    case 4: return wavesE[0];
+    case 5: return wavesF[0];
   }
-  else if (index < k_b_thr) {
-    table = wavesB;
-    index -= k_a_thr;
-  }
-  else if (index < k_c_thr) {
-    table = wavesC;
-    index -= k_b_thr;
-  }
-  else if (index < k_d_thr) {
-    table = wavesD;
-    index -= k_c_thr;
-  }
-  else {
-    table = wavesE;
-    index -= k_d_thr;
-  }
-
-  return table[index];
+  return wavesA[0];
 }
 
 void OSC_CYCLE(
@@ -92,8 +74,6 @@ void OSC_NOTEOFF(
 
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
-  static const uint8_t k_a_thr = k_waves_a_cnt;
-
   switch (index) {
   case k_user_osc_param_id1:
     state.index0 = value % 4;
