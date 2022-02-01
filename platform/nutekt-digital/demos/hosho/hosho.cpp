@@ -2,33 +2,17 @@
 
 #include <vector>
 #include <array>
-//
-// struct State {
-//   float disto_amount = 1.f;
-//   float vol0 = 1.f;
-//   size_t index0 = 0;
-//   float phi0 = 0.f;
-// };
-//
-// State state;
+
+struct State {
+  float time = 0.f;
+  uint32_t index = 0;
+};
+
+State state;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
-  // state = State();
-}
-
-const float* get_wavetable(size_t index)
-{
-
-  switch (index % 6) {
-    case 0: return wavesA[0];
-    case 1: return wavesB[0];
-    case 2: return wavesC[0];
-    case 3: return wavesD[0];
-    case 4: return wavesE[0];
-    case 5: return wavesF[0];
-  }
-  return wavesA[0];
+  state = State();
 }
 
 void OSC_CYCLE(
@@ -36,34 +20,50 @@ void OSC_CYCLE(
   int32_t* yy_,
   const uint32_t frames)
 {
-  // const float* wave0 = get_wavetable(state.index0);
-  //
   // const auto w0 = osc_w0f_for_note(
   //   (params->pitch)>>8,
   //   params->pitch & 0xFF);
-  //
-  // auto yy = static_cast<q31_t*>(yy_);
-  // auto yy_end = yy + frames;
-  // for (; yy < yy_end; yy++) {
-  //   float sig = 0.f;
-  //   sig += state.vol0 * osc_wave_scanf(wave0, state.phi0);
-  //
-  //   sig = osc_softclipf(0.0f, state.disto_amount * sig);
-  //   sig = osc_softclipf(0.1f, state.disto_amount * sig);
-  //
-  //   // sig = osc_sat_schetzenf(state.disto_amount * sig);
-  //   *yy = f32_to_q31(sig);
-  //
-  //   state.phi0 += w0;
-  //   state.phi0 -= static_cast<uint32_t>(state.phi0);
-  // }
+
+  auto yy = static_cast<q31_t*>(yy_);
+  auto yy_end = yy + frames;
+  for (; yy < yy_end; yy++) {
+    float sig = 0.f;
+    float vol = state.time < .5f ? 1.f : 0.f;
+    switch (state.index) {
+      default:
+      case 0:
+        vol *= 0.f;
+        break;
+      case 1:
+        vol *= .5f;
+        break;
+      case 2:
+        vol *= 1.f;
+        break;
+    }
+    sig += vol * osc_white();
+    //osc_sinf(state.phi0);
+    //
+    // sig = osc_softclipf(0.0f, state.disto_amount * sig);
+    // sig = osc_softclipf(0.1f, state.disto_amount * sig);
+    //
+    // sig = osc_sat_schetzenf(state.disto_amount * sig);
+    *yy = f32_to_q31(sig);
+
+    // state.phi0 += w0;
+    // state.phi0 -= static_cast<uint32_t>(state.phi0);
+
+    state.time += k_samplerate_recipf;
+  }
 
 }
 
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
-  // state.vol0 = 1.f;
+  state.time = 0;
+  state.index ++;
+  state.index %= 3;
 }
 
 void OSC_NOTEOFF(
