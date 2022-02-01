@@ -1,19 +1,23 @@
 #include "userosc.h"
 
 #include <array>
+#include <chrono>
+
+using namespace std::literals::chrono_literals;
 
 struct Item {
+  using Top = std::chrono::duration<float>;
   float vol = 1.f;
-  float gate_hold = .04f; // 40ms
-  float gate_attack = .1f; // tau
+  Top gate_hold = 40ms;
+  Top gate_attack = 2ms;
 };
 
 using Items = std::array<Item, 3>;
 
 constexpr Items hosho_items {
-  Item{.1f, .02f, 1e-5f},
-  Item{1.f, .08f, .5f},
-  Item{.05f, .01f, 1e-5f},
+  Item{.1f, 20ms, .1ms},
+  Item{1.f, 80ms, .5s},
+  Item{.05f, 10ms, .1ms},
 };
 
 struct State {
@@ -28,7 +32,8 @@ void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
   state = State();
 }
 
-float attach_shape(const float time, const float tau) {
+float attack_shape(const float time, const float tau)
+{
   return 1.f - expf(-time / tau);
 }
 
@@ -41,9 +46,11 @@ void OSC_CYCLE(
   auto yy_end = yy + frames;
   for (; yy < yy_end; yy++) {
     float sig = 0.f;
+
     const Item& item = hosho_items[state.index % 3];
+    const bool is_on = state.time < item.gate_hold.count();
     const float vol =
-      state.time < item.gate_hold ? item.vol * attach_shape(state.time, item.gate_attack) :
+      is_on ? item.vol * attack_shape(state.time, item.gate_attack.count()) :
       0.f;
 
     const float current = 10.f * osc_white();
@@ -53,7 +60,6 @@ void OSC_CYCLE(
 
     state.time += k_samplerate_recipf;
   }
-
 }
 
 void OSC_NOTEON(
