@@ -1,12 +1,26 @@
 #include "userosc.h"
 
 // #include <vector>
-// #include <array>
+#include <array>
+
+struct Item {
+  float vol = 1.f;
+  float gate_hold = .04f; // 40ms;
+  float gate_attack = .1f; // tau
+};
+
+using Collection = std::array<Item, 3>;
+
+constexpr Collection patate {
+  Item{.1f, .02f, 1e-5f},
+  Item{1.f, .08f, .5f},
+  Item{.05f, .01f, 1e-5f},
+};
 
 struct State {
   float time = 0.f;
   uint32_t index = 0;
-  float second_tau = .2;
+  // float second_tau = .2;
   // bool use_mean = true;
 
   // using Buffer = std::array<float, 32>;
@@ -41,19 +55,22 @@ void OSC_CYCLE(
   auto yy_end = yy + frames;
   for (; yy < yy_end; yy++) {
     float sig = 0.f;
-    float vol = state.time < gate_decay ? 1.f : 0.f;
-    switch (state.index) {
-      default:
-      case 0:
-        vol *= .8f;
-        break;
-      case 1:
-        vol *= attach_shape(state.time, state.second_tau);
-        break;
-      case 2:
-        vol *= .3f;
-        break;
-    }
+    const Item& item = patate[state.index % 3];
+    const float vol =
+      state.time < item.gate_hold ? item.vol * attach_shape(state.time, item.gate_attack) :
+      0.f;
+    // switch (state.index) {
+    //   default:
+    //   case 0:
+    //     vol *= .8f;
+    //     break;
+    //   case 1:
+    //     vol *= attach_shape(state.time, state.second_tau);
+    //     break;
+    //   case 2:
+    //     vol *= .3f;
+    //     break;
+    // }
 
     // const float prev = *state.current_sample;
 
@@ -61,7 +78,7 @@ void OSC_CYCLE(
     // if (state.current_sample >= state.samples.end())
       // state.current_sample = state.samples.begin();
 
-    const float current = osc_white();
+    const float current = 10.f * osc_white();
     // *state.current_sample = current;
     // state.accum += current;
 
@@ -108,7 +125,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   //   state.index0 = value % 4;
   //   break;
   case k_user_osc_param_shape:
-    state.second_tau = param_val_to_f32(value) * .2f;
+    // state.second_tau = param_val_to_f32(value) * .2f;
     break;
   // case k_user_osc_param_shiftshape:
   //   state.disto_amount = pow(10.f, 12.f * param_val_to_f32(value));
