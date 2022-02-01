@@ -1,13 +1,12 @@
 #include "userosc.h"
 
-#include <vector>
-#include <array>
-#include <array>
-// #include <cassert>
+// #include <vector>
+// #include <array>
 
 struct State {
   float time = 0.f;
   uint32_t index = 0;
+  float second_tau = .2;
   // bool use_mean = true;
 
   // using Buffer = std::array<float, 32>;
@@ -33,7 +32,7 @@ void OSC_CYCLE(
   int32_t* yy_,
   const uint32_t frames)
 {
-  constexpr float gate_decay = .05f; // seconds
+  constexpr float gate_decay = .04f; // seconds
   // const auto w0 = osc_w0f_for_note(
   //   (params->pitch)>>8,
   //   params->pitch & 0xFF);
@@ -46,10 +45,10 @@ void OSC_CYCLE(
     switch (state.index) {
       default:
       case 0:
-        vol *= 1.f;
+        vol *= .8f;
         break;
       case 1:
-        vol *= attach_shape(state.time, .1f);
+        vol *= attach_shape(state.time, state.second_tau);
         break;
       case 2:
         vol *= .3f;
@@ -109,7 +108,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   //   state.index0 = value % 4;
   //   break;
   case k_user_osc_param_shape:
-    // state.use_mean = clip01f(value * 0.01f) > .5f ? true : false;
+    state.second_tau = param_val_to_f32(value) * .2f;
     break;
   // case k_user_osc_param_shiftshape:
   //   state.disto_amount = pow(10.f, 12.f * param_val_to_f32(value));
