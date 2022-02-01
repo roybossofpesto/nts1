@@ -27,6 +27,7 @@ struct State {
   uint32_t beat_index = 0;
   float noise_mix = .5f;
   uint32_t count = 0;
+  uint32_t samplerate = 1;
 };
 
 static State state;
@@ -70,7 +71,7 @@ void OSC_CYCLE(
       return  vol * current;
     };
 
-    sig = state.count % 10 == 0 ? get_signal(state) : sig;
+    sig = state.count % state.samplerate == 0 ? get_signal(state) : sig;
     sig *= master_gain;
 
     *yy = f32_to_q31(sig);
@@ -99,6 +100,9 @@ void OSC_PARAM(uint16_t beat_index, uint16_t value)
   switch (beat_index) {
   case k_user_osc_param_id1:
     state.noise_mix = value / 99.f;
+    break;
+  case k_user_osc_param_id2:
+    state.samplerate = value;
     break;
   case k_user_osc_param_shape:
     std::get<1>(hosho_items).gate_attack = 200ms + param_val_to_f32(value) * 400ms;

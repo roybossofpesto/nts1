@@ -8,9 +8,10 @@
         "prg_id" : 0,
         "version" : "1.0-1",
         "name" : "hosho",
-        "num_param" : 1,
+        "num_param" : 2,
         "params" : [
-            ["Mix WN",      0,  99,  ""]
+            ["MixNoise",      0,  99,  ""],
+            ["SmplRt",      1,  16,  ""]
           ]
     }
 }
