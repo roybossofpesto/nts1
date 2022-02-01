@@ -14,11 +14,13 @@ struct Item {
 
 using Items = std::array<Item, 3>;
 
-constexpr Items hosho_items {
+static Items hosho_items {
   Item{.1f, 20ms, .1ms},
   Item{1.f, 80ms, .5s},
   Item{.05f, 10ms, .1ms},
 };
+
+constexpr float master_gain = 10.f;
 
 struct State {
   float time = 0.f;
@@ -53,9 +55,10 @@ void OSC_CYCLE(
       is_on ? item.vol * attack_shape(state.time, item.gate_attack.count()) :
       0.f;
 
-    const float current = 10.f * osc_white();
+    const float current = 1.f * osc_white();
     sig += vol * current;
-
+    sig *= master_gain;
+    
     *yy = f32_to_q31(sig);
 
     state.time += k_samplerate_recipf;
@@ -83,10 +86,10 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   //   state.index0 = value % 4;
   //   break;
   case k_user_osc_param_shape:
-    // state.second_tau = param_val_to_f32(value) * .2f;
+    std::get<1>(hosho_items).gate_attack = 200ms + param_val_to_f32(value) * 400ms;
     break;
-  // case k_user_osc_param_shiftshape:
-  //   state.disto_amount = pow(10.f, 12.f * param_val_to_f32(value));
-  //   break;
+  case k_user_osc_param_shiftshape:
+    std::get<1>(hosho_items).gate_hold = param_val_to_f32(value) * 500ms;
+    break;
   }
 }
