@@ -44,13 +44,15 @@ void OSC_CYCLE(
   int32_t* yy_,
   const uint32_t frames)
 {
+  const float lfo = q31_to_f32(params->shape_lfo);
+
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
   for (; yy < yy_end; yy++) {
     float sig = 0.f;
 
     const Item& item = hosho_items[state.index % std::tuple_size<Items>::value];
-    const bool is_on = state.time < item.gate_hold.count();
+    const bool is_on = state.time < (item.gate_hold.count() + lfo);
     const float vol =
       is_on ? item.vol * attack_shape(state.time, item.gate_attack.count()) :
       0.f;
@@ -58,7 +60,7 @@ void OSC_CYCLE(
     const float current = 1.f * osc_white();
     sig += vol * current;
     sig *= master_gain;
-    
+
     *yy = f32_to_q31(sig);
 
     state.time += k_samplerate_recipf;
