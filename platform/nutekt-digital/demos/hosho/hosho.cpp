@@ -25,6 +25,7 @@ constexpr float master_gain = 10.f;
 struct State {
   float time = 0.f;
   uint32_t index = 0;
+  float noise_mix = .5f;
 };
 
 State state;
@@ -37,6 +38,13 @@ void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 float attack_shape(const float time, const float tau)
 {
   return 1.f - expf(-time / tau);
+}
+
+float osc_shaped_noise() {
+  const float aa = fabs(osc_white());
+  const float bb = osc_white();
+  const float cc = sqrtf(-2 * logf(aa)) * cosf(M_PI * bb);
+  return cc;
 }
 
 void OSC_CYCLE(
@@ -57,7 +65,8 @@ void OSC_CYCLE(
       is_on ? item.vol * attack_shape(state.time, item.gate_attack.count()) :
       0.f;
 
-    const float current = 1.f * osc_white();
+
+    const float current = osc_white() * state.noise_mix + osc_shaped_noise() * (1.f - state.noise_mix);
     sig += vol * current;
     sig *= master_gain;
 
@@ -84,9 +93,9 @@ void OSC_NOTEOFF(
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
   switch (index) {
-  // case k_user_osc_param_id1:
-  //   state.index0 = value % 4;
-  //   break;
+  case k_user_osc_param_id1:
+    state.noise_mix = value / 99.f;
+    break;
   case k_user_osc_param_shape:
     std::get<1>(hosho_items).gate_attack = 200ms + param_val_to_f32(value) * 400ms;
     break;
