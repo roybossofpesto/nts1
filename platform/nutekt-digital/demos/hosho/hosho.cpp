@@ -15,12 +15,12 @@ struct Item {
 using Items = std::array<Item, 3>;
 
 static Items hosho_items {
-  Item{.1f, 20ms, .1ms},
-  Item{1.f, 80ms, .5s},
-  Item{.05f, 10ms, .1ms},
+  Item{.5f, 2ms, .01ms},
+  Item{1.f, 80ms, 1000s},
+  Item{.5f, 2ms, .30ms},
 };
 
-constexpr float master_gain = 10.f;
+constexpr float master_gain = 1.f;
 
 struct State {
   float time = 0.f;
