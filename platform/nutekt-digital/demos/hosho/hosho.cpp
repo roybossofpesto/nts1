@@ -17,11 +17,12 @@ using Items = std::array<Item, 3>;
 
 static Items hosho_items {
   Item{1.f, 20ms, .01ms, 0ms},
-  Item{1.f, 250ms /* (B) */, 10ms, 50ms /* (A) */ },
+  Item{1.f, 250ms /* (B) */, 50ms, 50ms /* (A) */ },
   Item{1.f, 2ms, .30ms, 0ms},
 };
 
 constexpr float master_gain = 1.f;
+constexpr float master_hosho_versus_mbira = .8f;
 
 struct State {
   float time = 0.f;
@@ -81,9 +82,10 @@ void OSC_CYCLE(
     sig_hosho = state.count % state.samplerate == 0 ? get_hosho_signal(state) : sig_hosho;
 
     const float sig_mbira = osc_sinf(state.phi0);
+
     const float sig_master = master_gain * (
-      .8f * sig_hosho +
-      .2f * sig_mbira);
+      master_hosho_versus_mbira * sig_hosho +
+      (1.f - master_hosho_versus_mbira) * sig_mbira);
     *yy = f32_to_q31(sig_master);
 
     state.time += k_samplerate_recipf;
