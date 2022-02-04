@@ -98,8 +98,10 @@ void OSC_CYCLE(
     return  vol * current;
   };
 
+  const Note in_note = (params->pitch >> 8) % 152;
+  const auto in_chord = in_note % 12;
   // const auto w0 = osc_w0f_for_note(
-  //   (params->pitch)>>8,
+  //   midi_note_in,
   //   params->pitch & 0xFF); // midi in
   // const auto w0 = 440.f * k_samplerate_recipf; // A 440Hz
   const auto mbira_index = state.index / 4;
