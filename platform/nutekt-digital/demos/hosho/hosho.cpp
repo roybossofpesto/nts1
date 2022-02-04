@@ -51,6 +51,7 @@ constexpr float master_hosho_versus_mbira = .5f;
 
 struct State {
   float time = 0.f;
+  float prev_time = -1.f;
   size_t index = 0;
   float noise_mix = .5f;
   uint32_t count = 0;
@@ -131,6 +132,7 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
+  state.prev_time = state.time;
   state.time = 0;
   state.index ++;
 }
@@ -143,6 +145,7 @@ void OSC_NOTEOFF(
 
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
+  const Top tempo = state.prev_time >= 0 ? (state.prev_time * 1s) : 0s;
   switch (index) {
   case k_user_osc_param_id1:
     state.noise_mix = value / 99.f;
@@ -150,11 +153,11 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   case k_user_osc_param_id2:
     state.samplerate = value;
     break;
-  case k_user_osc_param_shape:
-    std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * 200ms;
+  case k_user_osc_param_shape: /* (A) */
+    std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
     break;
-  case k_user_osc_param_shiftshape:
-    std::get<1>(hosho_items).gate_hold = param_val_to_f32(value) * 500ms;
+  case k_user_osc_param_shiftshape: /* (B) */
+    std::get<1>(hosho_items).gate_hold = param_val_to_f32(value) * tempo;
     break;
   }
 }
