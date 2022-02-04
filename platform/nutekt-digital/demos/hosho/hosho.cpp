@@ -5,8 +5,9 @@
 
 using namespace std::literals::chrono_literals;
 
+using Top = std::chrono::duration<float>;
+
 struct Item {
-  using Top = std::chrono::duration<float>;
   float vol = 1.f;
   Top gate_hold = 500ms;
   Top gate_attack = 2ms;
@@ -31,6 +32,7 @@ struct State {
   uint32_t count = 0;
   uint32_t samplerate = 1;
   float phi0 = 0.f;
+  Top mbira_hold = 100ms;
 };
 
 static State state;
@@ -71,9 +73,10 @@ void OSC_CYCLE(
     return  vol * current;
   };
 
-  const auto w0 = osc_w0f_for_note(
-    (params->pitch)>>8,
-    params->pitch & 0xFF);
+  // const auto w0 = osc_w0f_for_note(
+  //   (params->pitch)>>8,
+  //   params->pitch & 0xFF);
+  const auto w0 = 440.f * k_samplerate_recipf;
 
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
@@ -81,7 +84,7 @@ void OSC_CYCLE(
   for (; yy < yy_end; yy++) {
     sig_hosho = state.count % state.samplerate == 0 ? get_hosho_signal(state) : sig_hosho;
 
-    const float sig_mbira = osc_sinf(state.phi0);
+    const float sig_mbira = state.time < state.mbira_hold.count() ? osc_sinf(state.phi0) : 0.f;
 
     const float sig_master = master_gain * (
       master_hosho_versus_mbira * sig_hosho +
