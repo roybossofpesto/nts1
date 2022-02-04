@@ -2,8 +2,32 @@
 
 #include <array>
 #include <chrono>
+#include <vector>
 
 using namespace std::literals::chrono_literals;
+
+using Note = uint8_t;
+using Chord = std::array<Note, 2>;
+using Chords = std::array<Chord, 7>;
+
+constexpr Chords mbira_midi_chords {
+  Chord{0, 7} /* do */,
+  {2, 9} /* re */,
+  {4, 11} /* mi */,
+  {5, 0} /* fa */,
+  {7, 2} /* sol */,
+  {9, 4} /* la */,
+  {11, 5} /* si */,
+};
+
+using Pattern = std::array<size_t, 12>;
+
+constexpr Pattern mbira_pattern {
+  0, 2, 4,
+  0, 2, 5,
+  0, 3, 5,
+  1, 3, 5,
+};
 
 using Top = std::chrono::duration<float>;
 
@@ -23,11 +47,11 @@ static Items hosho_items {
 };
 
 constexpr float master_gain = 1.f;
-constexpr float master_hosho_versus_mbira = .8f;
+constexpr float master_hosho_versus_mbira = .5f;
 
 struct State {
   float time = 0.f;
-  uint32_t beat_index = 0;
+  size_t index = 0;
   float noise_mix = .5f;
   uint32_t count = 0;
   uint32_t samplerate = 1;
@@ -62,7 +86,7 @@ void OSC_CYCLE(
   const float lfo = q31_to_f32(params->shape_lfo);
 
   const auto get_hosho_signal = [&lfo](const State& state_) -> float {
-    const Item& item = hosho_items[state_.beat_index % std::tuple_size<Items>::value];
+    const Item& item = hosho_items[state_.index % std::tuple_size<Items>::value];
     const bool is_on =
       state_.time >= item.gate_delay.count() &&
       state_.time < (item.gate_hold.count() + lfo);
@@ -75,8 +99,14 @@ void OSC_CYCLE(
 
   // const auto w0 = osc_w0f_for_note(
   //   (params->pitch)>>8,
-  //   params->pitch & 0xFF);
-  const auto w0 = 440.f * k_samplerate_recipf;
+  //   params->pitch & 0xFF); // midi in
+  // const auto w0 = 440.f * k_samplerate_recipf; // A 440Hz
+  const auto mbira_index = state.index / 4;
+  const auto current_chord = mbira_pattern[mbira_index % std::tuple_size<Pattern>::value];
+  const auto chord_notes = mbira_midi_chords[current_chord % std::tuple_size<Chords>::value];
+  const auto chord_note = std::get<0>(chord_notes);
+  const auto midi_note = 60 + chord_note;
+  const auto w0 = osc_w0f_for_note(midi_note, 0);
 
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
@@ -102,7 +132,7 @@ void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
   state.time = 0;
-  state.beat_index ++;
+  state.index ++;
 }
 
 void OSC_NOTEOFF(
@@ -111,9 +141,9 @@ void OSC_NOTEOFF(
   // state.vol0 = 0.f;
 }
 
-void OSC_PARAM(uint16_t beat_index, uint16_t value)
+void OSC_PARAM(uint16_t index, uint16_t value)
 {
-  switch (beat_index) {
+  switch (index) {
   case k_user_osc_param_id1:
     state.noise_mix = value / 99.f;
     break;
