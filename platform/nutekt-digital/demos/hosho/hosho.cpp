@@ -138,7 +138,7 @@ void OSC_CYCLE(
     const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
     const float sig_mbira = osc_sawf(state.phi0) * bb * aa;
 
-    const float sig_master = .3f * sig_hosho + .3f * sig_mbira; /*.5f + .5f * master_gain * (
+    const float sig_master = .3f * sig_hosho + .3f * sig_mbira; /*5f + .5f * master_gain * (
       master_hosho_versus_mbira * sig_hosho +
       (1.f - master_hosho_versus_mbira) * sig_mbira);*/
 
