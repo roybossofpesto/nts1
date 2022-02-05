@@ -59,6 +59,7 @@ struct State {
   float phi0 = 0.f;
   Top mbira_hold = 100ms;
   float master_hosho_mbira_mix = .5f;
+  size_t mbira_song = 0;
 
 };
 
@@ -128,7 +129,9 @@ void OSC_CYCLE(
   //   params->pitch & 0xFF); // midi in
   // const auto w0 = 440.f * k_samplerate_recipf; // A 440Hz
   const auto mbira_index = state.index / 4;
-  const auto current_chord = mbira_pattern[mbira_index % std::tuple_size<Pattern>::value];
+  const auto current_chord =
+    mbira_pattern[mbira_index % std::tuple_size<Pattern>::value] +
+    state.mbira_song;
   const auto chord_notes = mbira_midi_chords[current_chord % std::tuple_size<Chords>::value];
   const auto aa_chord_note = std::get<0>(chord_notes);
   const auto bb_chord_note = std::get<1>(chord_notes);
@@ -193,6 +196,9 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     break;
   case k_user_osc_param_id3:
     state.master_hosho_mbira_mix = value / 99.f;
+    break;
+  case k_user_osc_param_id4:
+    state.mbira_song = value;
     break;
   case k_user_osc_param_shape: /* (A) */
     std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
