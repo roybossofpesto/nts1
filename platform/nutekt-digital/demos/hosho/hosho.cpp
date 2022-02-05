@@ -206,24 +206,24 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     case k_user_osc_param_id2: /* Song */
       state.mbira_song = value;
       break;
-  case k_user_osc_param_id3: /* Nois */
-    state.noise_mix = value / 99.f;
-    break;
-  case k_user_osc_param_id4: /* Splr */
-    state.samplerate = value;
-    break;
-  case k_user_osc_param_id5: /* Wtbl */
-    state.mbira_wave = value;
-    break;
-  case k_user_osc_param_id6: /* VRng */
-    state.mbira_random_vol = value / 99.f;
-    break;
+    case k_user_osc_param_id3: /* Nois */
+      state.noise_mix = value / 99.f;
+      break;
+    case k_user_osc_param_id4: /* Splr */
+      state.samplerate = value;
+      break;
+    case k_user_osc_param_id5: /* Wtbl */
+      state.mbira_wave = value;
+      break;
+    case k_user_osc_param_id6: /* VRng */
+      state.mbira_random_vol = value / 99.f;
+      break;
 
-  case k_user_osc_param_shape: /* (A) */
-    std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
-    break;
-  case k_user_osc_param_shiftshape: /* (B) */
-    std::get<1>(hosho_items).gate_hold = param_val_to_f32(value) * tempo;
-    break;
+    case k_user_osc_param_shape: /* (A) */
+      std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
+      break;
+    case k_user_osc_param_shiftshape: /* (B) */
+      std::get<1>(hosho_items).gate_hold = param_val_to_f32(value) * tempo;
+      break;
   }
 }
