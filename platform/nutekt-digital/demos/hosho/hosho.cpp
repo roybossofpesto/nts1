@@ -4,6 +4,9 @@
 #include <chrono>
 #include <vector>
 #include <cstdlib>
+#include <limits>
+
+#include "mersenne.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -60,10 +63,11 @@ struct State {
   Top mbira_hold = 100ms;
   float master_hosho_mbira_mix = .5f;
   size_t mbira_song = 0;
-
+  float mbira_current_vol = 1.f;
 };
 
 static State state;
+static MersenneTwister rng;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
@@ -153,7 +157,7 @@ void OSC_CYCLE(
     const float aa = attack_shape(state.time, 10e-3f);
     const float delta_mbira = state.time - state.mbira_hold.count();
     const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
-    const float sig_mbira = osc_sawf(state.phi0) * bb * aa;
+    const float sig_mbira = state.mbira_current_vol * osc_sawf(state.phi0) * bb * aa;
 
     const float sig_master = master_gain * crossfade(
       sig_hosho,
@@ -172,6 +176,8 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
+  const float aa = static_cast<float>(rng()) / std::numeric_limits<uint32_t>::max();
+  state.mbira_current_vol = aa;
   state.prev_time = state.time;
   state.time = 0;
   state.phi0 = 0;

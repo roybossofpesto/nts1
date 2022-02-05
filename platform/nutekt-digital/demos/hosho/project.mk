@@ -6,7 +6,7 @@ PROJECT = hosho
 
 UCSRC =
 
-UCXXSRC = hosho.cpp
+UCXXSRC = hosho.cpp mersenne.cpp
 
 UINCDIR =
 
