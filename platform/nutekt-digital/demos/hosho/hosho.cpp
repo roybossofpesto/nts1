@@ -42,7 +42,7 @@ struct Item {
 using Items = std::array<Item, 3>;
 
 static Items hosho_items {
-  Item{1.f, 20ms, .01ms, 0ms},
+  Item{1.f, 20ms, 1ms, 0ms},
   Item{1.f, 250ms /* (B) */, 50ms, 50ms /* (A) */ },
   Item{1.f, 2ms, .30ms, 0ms},
 };
@@ -133,11 +133,14 @@ void OSC_CYCLE(
   for (; yy < yy_end; yy++) {
     sig_hosho = state.count % state.samplerate == 0 ? get_hosho_signal(state) : sig_hosho;
 
-    const float sig_mbira = state.time < state.mbira_hold.count() ? osc_sinf(state.phi0) : 0.f;
+    const float aa = attack_shape(state.time, 10e-3f);
+    const float delta_mbira = state.time - state.mbira_hold.count();
+    const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
+    const float sig_mbira = osc_sawf(state.phi0) * bb * aa;
 
-    const float sig_master = master_gain * (
+    const float sig_master = .3f * sig_hosho + .3f * sig_mbira; /*.5f + .5f * master_gain * (
       master_hosho_versus_mbira * sig_hosho +
-      (1.f - master_hosho_versus_mbira) * sig_mbira);
+      (1.f - master_hosho_versus_mbira) * sig_mbira);*/
 
     *yy = f32_to_q31(sig_master);
 
