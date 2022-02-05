@@ -122,6 +122,7 @@ void OSC_CYCLE(
 
   const Note in_note = (params->pitch >> 8) % 152;
   const auto in_chord_note = in_note % 12;
+  const auto in_octave_note = in_note / 12;
   // const auto w0 = osc_w0f_for_note(
   //   midi_note_in,
   //   params->pitch & 0xFF); // midi in
@@ -136,7 +137,8 @@ void OSC_CYCLE(
   const auto dist_in_bb = note_distance(in_chord_note, bb_chord_note);
 
   const auto chord_note = dist_in_aa < dist_in_bb ? aa_chord_note : bb_chord_note;
-  const auto midi_note = 60 + chord_note;
+
+  const auto midi_note = in_octave_note * 12 + chord_note;
   const auto w0 = osc_w0f_for_note(midi_note, 0);
 
   auto yy = static_cast<q31_t*>(yy_);
