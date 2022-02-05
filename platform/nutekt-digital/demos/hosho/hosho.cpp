@@ -36,17 +36,17 @@ using Top = std::chrono::duration<float>;
 
 struct Item {
   float vol = 1.f;
-  Top gate_hold = 500ms;
+  float gate_hold_ratio = .5f;
   Top gate_attack = 2ms;
-  Top gate_delay = 0ms;
+  float gate_delay_ratio = 0.f;
 };
 
 using Items = std::array<Item, 3>;
 
 static Items hosho_items {
-  Item{1.f, 20ms, 1ms, 0ms},
-  {1.f, 250ms /* (B) */, 50ms, 50ms /* (A) */ },
-  {1.f, 2ms, .30ms, 0ms},
+  Item{1.f, .1, 1ms, 0.f},
+  {1.f, .25 /* (B) */, 50ms, .2f /* (A) */ },
+  {1.f, .02, .30ms, 0.f},
 };
 
 constexpr float master_gain = 1.f;
@@ -59,7 +59,7 @@ struct State {
   uint32_t count = 0;
   uint32_t samplerate = 1;
   float phi0 = 0.f;
-  Top mbira_hold = 100ms;
+  float mbira_hold_ratio = .5f;
   float master_hosho_mbira_mix = .5f;
   size_t mbira_song = 0;
   float mbira_current_vol = 1.f;
@@ -112,15 +112,18 @@ void OSC_CYCLE(
   int32_t* yy_,
   const uint32_t frames)
 {
+  const Top tempo = state.prev_time >= 0 ? (state.prev_time * 1s) : 0s;
   const float lfo = q31_to_f32(params->shape_lfo);
 
-  const auto get_hosho_signal = [&lfo](const State& state_) -> float {
+  const auto get_hosho_signal = [&lfo, &tempo](const State& state_) -> float {
     const Item& item = hosho_items[state_.index % std::tuple_size<Items>::value];
+    const Top gate_delay = item.gate_delay_ratio * tempo;
+    const Top gate_hold = item.gate_hold_ratio * tempo;
     const bool is_on =
-      state_.time >= item.gate_delay.count() &&
-      state_.time < (item.gate_hold.count() + lfo);
+      state_.time >= gate_delay.count() &&
+      state_.time < (gate_hold.count() + lfo);
     const float vol =
-      is_on ? item.vol * attack_shape(state_.time - item.gate_delay.count(), item.gate_attack.count()) :
+      is_on ? item.vol * attack_shape(state_.time - gate_delay.count(), item.gate_attack.count()) :
       0.f;
     const float current = osc_white() * state_.noise_mix + osc_shaped_noise() * (1.f - state_.noise_mix);
     return  vol * current;
@@ -149,6 +152,7 @@ void OSC_CYCLE(
   const auto midi_note = in_octave_note * 12 + chord_note;
   const auto w0 = osc_w0f_for_note(midi_note, 0);
 
+
   auto yy = static_cast<q31_t*>(yy_);
   auto yy_end = yy + frames;
   float sig_hosho = 0.f;
@@ -156,7 +160,7 @@ void OSC_CYCLE(
     sig_hosho = state.count % state.samplerate == 0 ? get_hosho_signal(state) : sig_hosho;
 
     const float aa = attack_shape(state.time, 10e-3f);
-    const float delta_mbira = state.time - state.mbira_hold.count();
+    const float delta_mbira = state.time - state.mbira_hold_ratio * tempo.count();
     const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
     const float sig_mbira = state.mbira_current_vol * osc_bl_sawf(state.phi0, state.mbira_wave % 7) * bb * aa;
 
@@ -198,7 +202,6 @@ void OSC_NOTEOFF(
 
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
-  const Top tempo = state.prev_time >= 0 ? (state.prev_time * 1s) : 0s;
   switch (index) {
     case k_user_osc_param_id1: /* Fade */
       state.master_hosho_mbira_mix = value / 99.f;
@@ -220,10 +223,10 @@ void OSC_PARAM(uint16_t index, uint16_t value)
       break;
 
     case k_user_osc_param_shape: /* (A) */
-      std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
+      std::get<1>(hosho_items).gate_delay_ratio = param_val_to_f32(value);
       break;
     case k_user_osc_param_shiftshape: /* (B) */
-      std::get<1>(hosho_items).gate_hold = param_val_to_f32(value) * tempo;
+      std::get<1>(hosho_items).gate_hold_ratio = param_val_to_f32(value);
       break;
   }
 }
