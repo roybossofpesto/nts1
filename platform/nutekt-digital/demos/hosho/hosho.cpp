@@ -48,7 +48,7 @@ static Items hosho_items {
 };
 
 constexpr float master_gain = 1.f;
-constexpr float master_hosho_versus_mbira = .5f;
+constexpr float master_hosho_versus_mbira = 0.f;
 
 struct State {
   float time = 0.f;
@@ -80,8 +80,10 @@ float osc_shaped_noise() {
   return cc;
 }
 
-auto note_distance(const Note aa, const Note bb)
+size_t note_distance(const Note aa_, const Note bb_)
 {
+  const auto aa = static_cast<int32_t>(aa_);
+  const auto bb = static_cast<int32_t>(bb_);
   return std::min(
     abs(aa - bb),
     abs(bb - aa));
@@ -136,6 +138,7 @@ void OSC_CYCLE(
     const float sig_master = master_gain * (
       master_hosho_versus_mbira * sig_hosho +
       (1.f - master_hosho_versus_mbira) * sig_mbira);
+
     *yy = f32_to_q31(sig_master);
 
     state.time += k_samplerate_recipf;
@@ -150,6 +153,7 @@ void OSC_NOTEON(
 {
   state.prev_time = state.time;
   state.time = 0;
+  state.phi0 = 0;
   state.index ++;
 }
 
