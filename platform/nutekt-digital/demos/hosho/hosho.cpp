@@ -3,6 +3,7 @@
 #include <array>
 #include <chrono>
 #include <vector>
+#include <cstdlib>
 
 using namespace std::literals::chrono_literals;
 
@@ -79,6 +80,13 @@ float osc_shaped_noise() {
   return cc;
 }
 
+auto note_distance(const Note aa, const Note bb)
+{
+  return std::min(
+    abs(aa - bb),
+    abs(bb - aa));
+}
+
 void OSC_CYCLE(
   const user_osc_param_t* const params,
   int32_t* yy_,
@@ -99,7 +107,7 @@ void OSC_CYCLE(
   };
 
   const Note in_note = (params->pitch >> 8) % 152;
-  const auto in_chord = in_note % 12;
+  const auto in_chord_note = in_note % 12;
   // const auto w0 = osc_w0f_for_note(
   //   midi_note_in,
   //   params->pitch & 0xFF); // midi in
@@ -107,7 +115,13 @@ void OSC_CYCLE(
   const auto mbira_index = state.index / 4;
   const auto current_chord = mbira_pattern[mbira_index % std::tuple_size<Pattern>::value];
   const auto chord_notes = mbira_midi_chords[current_chord % std::tuple_size<Chords>::value];
-  const auto chord_note = std::get<0>(chord_notes);
+  const auto aa_chord_note = std::get<0>(chord_notes);
+  const auto bb_chord_note = std::get<1>(chord_notes);
+
+  const auto dist_in_aa = note_distance(in_chord_note, aa_chord_note);
+  const auto dist_in_bb = note_distance(in_chord_note, bb_chord_note);
+
+  const auto chord_note = dist_in_aa < dist_in_bb ? aa_chord_note : bb_chord_note;
   const auto midi_note = 60 + chord_note;
   const auto w0 = osc_w0f_for_note(midi_note, 0);
 
