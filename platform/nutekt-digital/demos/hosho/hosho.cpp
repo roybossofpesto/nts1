@@ -43,8 +43,8 @@ using Items = std::array<Item, 3>;
 
 static Items hosho_items {
   Item{1.f, 20ms, 1ms, 0ms},
-  Item{1.f, 250ms /* (B) */, 50ms, 50ms /* (A) */ },
-  Item{1.f, 2ms, .30ms, 0ms},
+  {1.f, 250ms /* (B) */, 50ms, 50ms /* (A) */ },
+  {1.f, 2ms, .30ms, 0ms},
 };
 
 constexpr float master_gain = 1.f;
@@ -188,18 +188,19 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 {
   const Top tempo = state.prev_time >= 0 ? (state.prev_time * 1s) : 0s;
   switch (index) {
-  case k_user_osc_param_id1:
+    case k_user_osc_param_id1: /* XFad */
+      state.master_hosho_mbira_mix = value / 99.f;
+      break;
+    case k_user_osc_param_id2: /* Song */
+      state.mbira_song = value;
+      break;
+  case k_user_osc_param_id3: /* Nois */
     state.noise_mix = value / 99.f;
     break;
-  case k_user_osc_param_id2:
+  case k_user_osc_param_id4: /* Splr */
     state.samplerate = value;
     break;
-  case k_user_osc_param_id3:
-    state.master_hosho_mbira_mix = value / 99.f;
-    break;
-  case k_user_osc_param_id4:
-    state.mbira_song = value;
-    break;
+
   case k_user_osc_param_shape: /* (A) */
     std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
     break;

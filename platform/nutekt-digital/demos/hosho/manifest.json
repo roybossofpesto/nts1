@@ -1,19 +1,19 @@
 {
-    "header" :
-    {
-        "platform" : "nutekt-digital",
-        "module" : "osc",
-        "api" : "1.1-0",
-        "dev_id" : 0,
-        "prg_id" : 0,
-        "version" : "1.0-1",
-        "name" : "hosho",
-        "num_param" : 4,
-        "params" : [
-            ["MixNoise",      0,  99,  ""],
-            ["SmplRt",      1,  16,  ""],
-            ["XFad",      0,  99,  ""],
-            ["Song",      0,  6,  ""]
-          ]
-    }
+  "header" :
+  {
+    "platform" : "nutekt-digital",
+    "module" : "osc",
+    "api" : "1.1-0",
+    "dev_id" : 0,
+    "prg_id" : 0,
+    "version" : "1.0-1",
+    "name" : "hosho",
+    "num_param" : 4,
+    "params" : [
+      ["XFad",      0,  99,  ""],
+      ["Song",      0,  6,  ""],
+      ["Nois",      0,  99,  ""],
+      ["Splr",      1,  16,  ""]
+    ]
+  }
 }
