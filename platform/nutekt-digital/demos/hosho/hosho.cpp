@@ -157,7 +157,7 @@ void OSC_CYCLE(
     const float aa = attack_shape(state.time, 10e-3f);
     const float delta_mbira = state.time - state.mbira_hold.count();
     const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
-    const float sig_mbira = state.mbira_current_vol * osc_sawf(state.phi0) * bb * aa;
+    const float sig_mbira = state.mbira_current_vol * osc_bl_sawf(state.phi0, 0) * bb * aa;
 
     const float sig_master = master_gain * crossfade(
       sig_hosho,
