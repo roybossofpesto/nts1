@@ -48,7 +48,6 @@ static Items hosho_items {
 };
 
 constexpr float master_gain = 1.f;
-constexpr float master_hosho_versus_mbira = 0.f;
 
 struct State {
   float time = 0.f;
@@ -59,6 +58,8 @@ struct State {
   uint32_t samplerate = 1;
   float phi0 = 0.f;
   Top mbira_hold = 100ms;
+  float master_hosho_mbira_mix = .5f;
+
 };
 
 static State state;
@@ -87,6 +88,17 @@ size_t note_distance(const Note aa_, const Note bb_)
   return std::min(
     abs(aa - bb),
     abs(bb - aa));
+}
+
+
+auto crossfade(const float aa, const float bb, const float mix_) -> float
+{
+  const auto mix = clip01f(mix_);
+  return
+    mix < .5f ? aa + mix * bb * 2.f :
+    2.f * (1 - mix) * aa + bb;
+  // const auto mix_ = 1.f - mix;
+  // return aa * mix_ + bb * mix;
 }
 
 void OSC_CYCLE(
@@ -138,9 +150,10 @@ void OSC_CYCLE(
     const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
     const float sig_mbira = osc_sawf(state.phi0) * bb * aa;
 
-    const float sig_master = .3f * sig_hosho + .3f * sig_mbira; /*5f + .5f * master_gain * (
-      master_hosho_versus_mbira * sig_hosho +
-      (1.f - master_hosho_versus_mbira) * sig_mbira);*/
+    const float sig_master = master_gain * crossfade(
+      sig_hosho,
+      sig_mbira,
+      state.master_hosho_mbira_mix);
 
     *yy = f32_to_q31(sig_master);
 
@@ -175,6 +188,9 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     break;
   case k_user_osc_param_id2:
     state.samplerate = value;
+    break;
+  case k_user_osc_param_id3:
+    state.master_hosho_mbira_mix = value / 99.f;
     break;
   case k_user_osc_param_shape: /* (A) */
     std::get<1>(hosho_items).gate_delay = param_val_to_f32(value) * tempo;
