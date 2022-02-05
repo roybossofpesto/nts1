@@ -64,6 +64,7 @@ struct State {
   float master_hosho_mbira_mix = .5f;
   size_t mbira_song = 0;
   float mbira_current_vol = 1.f;
+  uint8_t mbira_wave = 0;
 };
 
 static State state;
@@ -157,7 +158,7 @@ void OSC_CYCLE(
     const float aa = attack_shape(state.time, 10e-3f);
     const float delta_mbira = state.time - state.mbira_hold.count();
     const float bb = delta_mbira < 0 ? 1.f : expf(-delta_mbira / 1e-2f);
-    const float sig_mbira = state.mbira_current_vol * osc_bl_sawf(state.phi0, 0) * bb * aa;
+    const float sig_mbira = state.mbira_current_vol * osc_bl_sawf(state.phi0, state.mbira_wave % 7) * bb * aa;
 
     const float sig_master = master_gain * crossfade(
       sig_hosho,
@@ -205,6 +206,9 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     break;
   case k_user_osc_param_id4: /* Splr */
     state.samplerate = value;
+    break;
+  case k_user_osc_param_id5: /* Wtbl */
+    state.mbira_wave = value;
     break;
 
   case k_user_osc_param_shape: /* (A) */
