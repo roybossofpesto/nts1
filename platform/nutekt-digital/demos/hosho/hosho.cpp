@@ -4,7 +4,6 @@
 #include <chrono>
 #include <vector>
 #include <cstdlib>
-#include <limits>
 
 #include "mersenne.h"
 
@@ -65,6 +64,7 @@ struct State {
   size_t mbira_song = 0;
   float mbira_current_vol = 1.f;
   uint8_t mbira_wave = 0;
+  float mbira_random_vol = .5f;
 };
 
 static State state;
@@ -177,8 +177,13 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
-  const float aa = static_cast<float>(rng()) / std::numeric_limits<uint32_t>::max();
-  state.mbira_current_vol = aa;
+  const float xx = rng.uniform();
+  const float foo = state.mbira_random_vol;
+  const float low_bound = foo < .5f ? 0.f : (2.f * foo - 1.f);
+  const float high_bound = foo < .5f ? (2.f * foo) : 1.f;
+  float mbira_volume = (1.f - xx) * low_bound + xx * high_bound;
+  if (mbira_volume < .2f) mbira_volume = 0.f;
+  state.mbira_current_vol = mbira_volume;
   state.prev_time = state.time;
   state.time = 0;
   state.phi0 = 0;
@@ -195,7 +200,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 {
   const Top tempo = state.prev_time >= 0 ? (state.prev_time * 1s) : 0s;
   switch (index) {
-    case k_user_osc_param_id1: /* XFad */
+    case k_user_osc_param_id1: /* Fade */
       state.master_hosho_mbira_mix = value / 99.f;
       break;
     case k_user_osc_param_id2: /* Song */
@@ -209,6 +214,9 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     break;
   case k_user_osc_param_id5: /* Wtbl */
     state.mbira_wave = value;
+    break;
+  case k_user_osc_param_id6: /* VRng */
+    state.mbira_random_vol = value / 99.f;
     break;
 
   case k_user_osc_param_shape: /* (A) */

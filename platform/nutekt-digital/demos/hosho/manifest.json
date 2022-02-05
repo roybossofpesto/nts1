@@ -8,13 +8,14 @@
     "prg_id" : 0,
     "version" : "1.0-1",
     "name" : "hosho",
-    "num_param" : 5,
+    "num_param" : 6,
     "params" : [
-      ["XFad",      0,  99,  ""],
+      ["Fade",      0,  99,  ""],
       ["Song",      0,  6,  ""],
       ["Nois",      0,  99,  ""],
       ["Splr",      1,  16,  ""],
-      ["Wvtb",      0,  6,  ""]
+      ["Wvtb",      0,  6,  ""],
+      ["VRng",      0,  99,  ""]
     ]
   }
 }

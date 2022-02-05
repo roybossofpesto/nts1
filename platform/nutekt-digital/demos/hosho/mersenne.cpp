@@ -5,6 +5,8 @@
 //
 #include "mersenne.h"
 
+#include <limits>
+
 /// generate initial internal state
 MersenneTwister::MersenneTwister(uint32_t seed)
 : next(0)
@@ -29,6 +31,14 @@ uint32_t MersenneTwister::operator()()
   x ^=  x >> 18;
   return x;
 }
+
+float MersenneTwister::uniform()
+{
+  const uint32_t xx_ = this->operator()();
+  const auto xx = static_cast<float>(xx_);
+  return xx / std::numeric_limits<decltype(xx_)>::max();
+}
+
 /// create new state (based on old one)
 void MersenneTwister::twist()
 {

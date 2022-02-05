@@ -21,6 +21,7 @@ public:
   MersenneTwister(uint32_t seed = 5489);
   /// return a random 32 bit number
   uint32_t operator()();
+  float uniform();
 private:
   /// create new state (based on old one)
   void twist();
