@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <cstdlib>
+#include <tuple>
 
 #include "mersenne.h"
 
@@ -71,7 +72,8 @@ struct State {
 static State state;
 static MersenneTwister rng(103424);
 
-static std::array<std::array<float, 12>, 100> rng_buffers;
+using RngBuffers = std::array<std::array<float, 12>, 100>;
+static RngBuffers rng_buffers;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
@@ -190,8 +192,10 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
-  const auto& rng_buffer = rng_buffers[state.rng_buffer_index % rng_buffers.size()];
-  const float rng_value = rng_buffer[state.index % rng_buffer.size()];
+  constexpr auto rng_buffers_max = std::tuple_size<RngBuffers>::value;
+  constexpr auto rng_buffer_max = std::tuple_size<RngBuffers::value_type>::value;
+  const auto& rng_buffer = rng_buffers[state.rng_buffer_index % rng_buffers_max];
+  const float rng_value = rng_buffer[state.index % rng_buffer_max];
 
   const float foo = state.mbira_random_vol;
   const float low_bound = foo < .5f ? 0.f : (2.f * foo - 1.f);
