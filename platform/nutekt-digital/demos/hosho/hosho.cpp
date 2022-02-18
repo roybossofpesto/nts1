@@ -59,7 +59,7 @@ struct State {
   uint32_t count = 0;
   uint32_t samplerate = 1;
   float phi0 = 0.f;
-  float mbira_hold_ratio = .8f;
+  static constexpr float mbira_hold_ratio = .95f;
   float master_hosho_mbira_mix = .5f;
   size_t mbira_song = 0;
   float mbira_current_vol = 1.f;
