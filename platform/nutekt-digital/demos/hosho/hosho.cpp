@@ -65,24 +65,21 @@ struct State {
   float mbira_current_vol = 1.f;
   uint8_t mbira_wave = 0;
   float mbira_random_vol = .5f;
-  size_t root_index = 0;
+  size_t rng_buffer_index = 0;
 };
 
 static State state;
+static MersenneTwister rng(103424);
 
-static const std::array<MersenneTwister, 4> rng_roots {
-  MersenneTwister(),
-  MersenneTwister(103424),
-  MersenneTwister(845724),
-  MersenneTwister(483247),
-};
-
-static MersenneTwister rng = std::get<0>(rng_roots);
+static std::array<std::array<float, 12>, 4> rng_buffers;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
-  rng = std::get<0>(rng_roots);
+
+  for (auto& rng_buffer : rng_buffers)
+    for (auto& rng_value : rng_buffer)
+      rng_value = rng.uniform();
 }
 
 float attack_shape(const float time, const float tau)
@@ -191,14 +188,13 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
-  if (state.index % 12 == 0)
-    rng = rng_roots[state.root_index % rng_roots.size()];
+  const auto& rng_buffer = rng_buffers[state.rng_buffer_index % rng_buffers.size()];
+  const float rng_value = rng_buffer[state.index % rng_buffer.size()];
 
-  const float xx = rng.uniform();
   const float foo = state.mbira_random_vol;
   const float low_bound = foo < .5f ? 0.f : (2.f * foo - 1.f);
   const float high_bound = foo < .5f ? (2.f * foo) : 1.f;
-  float mbira_volume = (1.f - xx) * low_bound + xx * high_bound;
+  float mbira_volume = (1.f - rng_value) * low_bound + rng_value * high_bound;
   if (mbira_volume < .2f) mbira_volume = 0.f;
   state.mbira_current_vol = mbira_volume;
   state.prev_time = state.time;
@@ -226,7 +222,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     //   state.noise_mix = value / 99.f;
     //   break;
     case k_user_osc_param_id3: /* Seed */
-      state.root_index = value;
+      state.rng_buffer_index = value;
       break;
     case k_user_osc_param_id4: /* Splr */
       state.samplerate = value;
