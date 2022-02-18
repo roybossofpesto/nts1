@@ -65,18 +65,24 @@ struct State {
   float mbira_current_vol = 1.f;
   uint8_t mbira_wave = 0;
   float mbira_random_vol = .5f;
-  uint32_t default_seed = 5489;
+  size_t root_index = 0;
 };
 
 static State state;
 
-static const MersenneTwister rng_root = MersenneTwister();
-static MersenneTwister rng = rng_root;
+static const std::array<MersenneTwister, 4> rng_roots {
+  MersenneTwister(),
+  MersenneTwister(103424),
+  MersenneTwister(845724),
+  MersenneTwister(483247),
+};
+
+static MersenneTwister rng = std::get<0>(rng_roots);
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
-  rng = rng_root; // FIXME should use lut
+  rng = rng_roots[0]; // FIXME should use lut
 }
 
 float attack_shape(const float time, const float tau)
@@ -186,7 +192,7 @@ void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
   if (state.index % 12 == 0)
-    rng = rng_root;
+    rng = rng_roots[state.root_index % rng_roots.size()];
 
   const float xx = rng.uniform();
   const float foo = state.mbira_random_vol;
@@ -220,7 +226,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     //   state.noise_mix = value / 99.f;
     //   break;
     case k_user_osc_param_id3: /* Seed */
-      state.default_seed = 5489 + static_cast<uint32_t>(value);
+      state.root_index = value;
       break;
     case k_user_osc_param_id4: /* Splr */
       state.samplerate = value;
