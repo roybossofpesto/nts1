@@ -224,7 +224,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     //   state.noise_mix = value / 99.f;
     //   break;
     case k_user_osc_param_id3: /* GDel */
-      std::get<1>(hosho_items).gate_delay_ratio = param_val_to_f32(value);
+      std::get<1>(hosho_items).gate_delay_ratio = value / 99.;
       break;
     case k_user_osc_param_id4: /* Splr */
       state.samplerate = value;
@@ -232,15 +232,15 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     case k_user_osc_param_id5: /* Wtbl */
       state.mbira_wave = value;
       break;
-    case k_user_osc_param_id6: /* VRng */
-      state.mbira_random_vol = value / 99.f;
+    case k_user_osc_param_id6: /* GHol */
+      std::get<1>(hosho_items).gate_hold_ratio = value / 99.;
       break;
 
     case k_user_osc_param_shape: /* Seed (A) */
       state.rng_buffer_index = value;
       break;
-    case k_user_osc_param_shiftshape: /* GHol (B) */
-      std::get<1>(hosho_items).gate_hold_ratio = param_val_to_f32(value);
+    case k_user_osc_param_shiftshape: /* VRng (B) */
+      state.mbira_random_vol = param_val_to_f32(value);
       break;
   }
 }
