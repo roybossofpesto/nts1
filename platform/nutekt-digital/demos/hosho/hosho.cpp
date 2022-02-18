@@ -76,8 +76,7 @@ static MersenneTwister rng = rng_root;
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
-  // rng.uniform();
-  rng = rng_root;
+  rng = rng_root; // FIXME should use lut
 }
 
 float attack_shape(const float time, const float tau)
@@ -186,8 +185,8 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
-  // if (state.index % 12 == 0)
-  //   rng = MersenneTwister(state.default_seed);
+  if (state.index % 12 == 0)
+    rng = rng_root;
 
   const float xx = rng.uniform();
   const float foo = state.mbira_random_vol;
