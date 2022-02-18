@@ -71,7 +71,7 @@ struct State {
 static State state;
 static MersenneTwister rng(103424);
 
-static std::array<std::array<float, 12>, 4> rng_buffers;
+static std::array<std::array<float, 12>, 100> rng_buffers;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
