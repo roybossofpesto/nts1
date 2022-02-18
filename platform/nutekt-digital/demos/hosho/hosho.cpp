@@ -82,7 +82,7 @@ static MersenneTwister rng = std::get<0>(rng_roots);
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
-  rng = rng_roots[0]; // FIXME should use lut
+  rng = std::get<0>(rng_roots);
 }
 
 float attack_shape(const float time, const float tau)
