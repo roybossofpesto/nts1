@@ -228,16 +228,16 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     //   state.noise_mix = value / 99.f;
     //   break;
     case k_user_osc_param_id3: /* GDel */
-      std::get<1>(hosho_items).gate_delay_ratio = value / 99.;
+      std::get<1>(hosho_items).gate_delay_ratio = value / 99.f;
       break;
-    case k_user_osc_param_id4: /* Splr */
-      state.samplerate = value;
+    case k_user_osc_param_id4: /* GHol */
+      std::get<1>(hosho_items).gate_hold_ratio = value / 99.f;
       break;
     case k_user_osc_param_id5: /* Wtbl */
       state.mbira_wave = value;
       break;
-    case k_user_osc_param_id6: /* GHol */
-      std::get<1>(hosho_items).gate_hold_ratio = value / 99.;
+    case k_user_osc_param_id6: /* Splr */
+      state.samplerate = value;
       break;
 
     case k_user_osc_param_shape: /* Seed (A) */
