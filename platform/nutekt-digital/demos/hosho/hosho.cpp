@@ -59,7 +59,7 @@ struct State {
   uint32_t count = 0;
   uint32_t samplerate = 1;
   float phi0 = 0.f;
-  float mbira_hold_ratio = .5f;
+  float mbira_hold_ratio = .8f;
   float master_hosho_mbira_mix = .5f;
   size_t mbira_song = 0;
   float mbira_current_vol = 1.f;
@@ -77,9 +77,11 @@ void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
 
-  for (auto& rng_buffer : rng_buffers)
-    for (auto& rng_value : rng_buffer)
-      rng_value = rng.uniform();
+  { // reseed rng_buffers
+    for (auto& rng_buffer : rng_buffers)
+      for (auto& rng_value : rng_buffer)
+        rng_value = rng.uniform();
+  }
 }
 
 float attack_shape(const float time, const float tau)
