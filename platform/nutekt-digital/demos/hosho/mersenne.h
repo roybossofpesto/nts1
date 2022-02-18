@@ -18,7 +18,7 @@ class MersenneTwister
   int      next;
 public:
   /// generate initial internal state
-  MersenneTwister(uint32_t seed = 5489);
+  explicit MersenneTwister(uint32_t seed = 5489);
   /// return a random 32 bit number
   uint32_t operator()();
   float uniform();
