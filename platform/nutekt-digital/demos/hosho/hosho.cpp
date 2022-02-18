@@ -55,7 +55,7 @@ struct State {
   float time = 0.f;
   float prev_time = -1.f;
   size_t index = 0;
-  float noise_mix = .5f;
+  static constexpr float noise_mix = .95f;
   uint32_t count = 0;
   uint32_t samplerate = 1;
   float phi0 = 0.f;
@@ -65,14 +65,18 @@ struct State {
   float mbira_current_vol = 1.f;
   uint8_t mbira_wave = 0;
   float mbira_random_vol = .5f;
+  uint32_t default_seed = 5489;
 };
 
 static State state;
 static MersenneTwister rng;
 
+
+
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
+  rng = MersenneTwister(state.default_seed);
 }
 
 float attack_shape(const float time, const float tau)
@@ -181,6 +185,9 @@ void OSC_CYCLE(
 void OSC_NOTEON(
   const user_osc_param_t* const params)
 {
+  if (state.index % 12 == 0)
+    rng = MersenneTwister(state.default_seed);
+
   const float xx = rng.uniform();
   const float foo = state.mbira_random_vol;
   const float low_bound = foo < .5f ? 0.f : (2.f * foo - 1.f);
@@ -209,8 +216,11 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     case k_user_osc_param_id2: /* Song */
       state.mbira_song = value;
       break;
-    case k_user_osc_param_id3: /* Nois */
-      state.noise_mix = value / 99.f;
+    // case k_user_osc_param_id3: /* Nois */
+    //   state.noise_mix = value / 99.f;
+    //   break;
+    case k_user_osc_param_id3: /* Seed */
+      state.default_seed = 5489 + static_cast<uint32_t>(value);
       break;
     case k_user_osc_param_id4: /* Splr */
       state.samplerate = value;
