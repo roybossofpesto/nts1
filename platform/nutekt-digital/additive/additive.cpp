@@ -70,18 +70,20 @@ void OSC_CYCLE(
 	}
 
 	const float lfo = q31_to_f32(params->shape_lfo);
-
+	const float tan_cutoff = tanf(M_PI * (state.cutoff * .2f + lfo * .1f));
 	// const float lfo = q31_to_f32(params->shape_lfo);
 	for (uint32_t i = 0; i < frames; i++)	{
 		/****** Forme d'onde ******/
 		const float signal =
 			osc_bl_sqrf(state.phase0, state.waveIndex) * state.vol0 +
 			osc_bl_sawf(state.phase1, state.waveIndex) * state.vol1;
-		const float signal_ = osc_softclipf(
+
+		filter.mCoeffs.setSOLP(tan_cutoff, 1.3f);
+		const float signal_ = filter.process(signal);
+
+		const float signal__ = osc_softclipf(
 			.2f,
-			state.softclipAmt * signal);
-		filter.mCoeffs.setSOLP(tanf(M_PI * state.cutoff * lfo), 1.2f);
-		const float signal__ = filter.process(signal_);
+			state.softclipAmt * signal_);
 
 		/**************************/
 
@@ -114,7 +116,7 @@ void OSC_PARAM(const uint16_t index, const uint16_t value)
 		state.vol1 = param_val_to_f32(value);
 		break;
 	case k_user_osc_param_id1:
-		state.softclipAmt = .5f + value / 10.f;
+		state.softclipAmt = .5f + powf(value / 99.f, 1.8f) * 10.f;
 		break;
 	case k_user_osc_param_id2:
 		state.octaveShift = value;
@@ -123,7 +125,7 @@ void OSC_PARAM(const uint16_t index, const uint16_t value)
 		state.waveIndex = value;
 		break;
 	case k_user_osc_param_id4:
-		state.cutoff = value / 99.f * .2f + .01f; // * k_samplerate_recipf;
+		state.cutoff = powf(value / 99.f, 1.8f);
 		break;
 	default:
 		break;
