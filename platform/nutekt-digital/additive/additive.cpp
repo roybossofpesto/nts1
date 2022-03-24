@@ -1,4 +1,6 @@
 #include "userosc.h"
+#include "dsp/biquad.hpp"
+#include "utils/float_math.h"
 
 struct State
 {
@@ -7,17 +9,20 @@ struct State
 	float vol0 = 1.f;
 	float vol1 = 1.f;
 	float softclipAmt = 0.f;
+	float cutoff = 4.f;
 	uint8_t octaveShift = -1;
 	uint8_t waveIndex = 0;
 };
 
 static State state;
+static dsp::BiQuad filter;
 
 void OSC_INIT(
 	const uint32_t /*platform*/,
 	const uint32_t /*api*/)
 {
 	state = State{};
+	filter.flush();
 }
 
 void OSC_CYCLE(
@@ -64,6 +69,8 @@ void OSC_CYCLE(
 		break;
 	}
 
+	const float lfo = q31_to_f32(params->shape_lfo);
+
 	// const float lfo = q31_to_f32(params->shape_lfo);
 	for (uint32_t i = 0; i < frames; i++)	{
 		/****** Forme d'onde ******/
@@ -73,11 +80,13 @@ void OSC_CYCLE(
 		const float signal_ = osc_softclipf(
 			.2f,
 			state.softclipAmt * signal);
+		filter.mCoeffs.setSOLP(tanf(M_PI * state.cutoff * lfo), 1.2f);
+		const float signal__ = filter.process(signal_);
 
 		/**************************/
 
 		// Conversion de float à int
-		yn[i] = f32_to_q31(signal_);
+		yn[i] = f32_to_q31(signal__);
 
 		// Incrémentation et modulo de la phase
 		state.phase0 += w0;
@@ -112,6 +121,9 @@ void OSC_PARAM(const uint16_t index, const uint16_t value)
 		break;
 	case k_user_osc_param_id3:
 		state.waveIndex = value;
+		break;
+	case k_user_osc_param_id4:
+		state.cutoff = value / 99.f * .2f + .01f; // * k_samplerate_recipf;
 		break;
 	default:
 		break;
