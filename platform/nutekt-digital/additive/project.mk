@@ -2,16 +2,16 @@
 # Project Customization
 # #############################################################################
 
-PROJECT = osc_add
+PROJECT = additive
 
 UCSRC =
 
-UCXXSRC = add.cpp
+UCXXSRC = additive.cpp
 
 UINCDIR =
 
 UDEFS =
 
-ULIB = 
+ULIB =
 
 ULIBDIR =

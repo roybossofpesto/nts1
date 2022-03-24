@@ -8,7 +8,7 @@ struct State
 	float vol1 = 1.f;
 	float softclipAmt = 0.f;
 	uint8_t octaveShift = -1;
-	uint8_t sqrIdx = 0;
+	uint8_t waveIndex = 0;
 };
 
 static State state;
@@ -29,7 +29,7 @@ void OSC_CYCLE(
 	const uint8_t notePitch = 12 * state.octaveShift + (params->pitch >> 8);
 	const uint8_t modWheel = params->pitch & 0xFF;
 
-	float w0 = 0.f; 
+	float w0 = 0.f;
 	float w1 = 0.f;
 	switch (notePitch % 12) {
 	case 0:
@@ -68,15 +68,15 @@ void OSC_CYCLE(
 	for (uint32_t i = 0; i < frames; i++)	{
 		/****** Forme d'onde ******/
 		const float signal =
-			osc_bl_sqrf(state.phase0, state.sqrIdx) * state.vol0 +
-			osc_bl_sawf(state.phase1, state.sqrIdx) * state.vol1;
+			osc_bl_sqrf(state.phase0, state.waveIndex) * state.vol0 +
+			osc_bl_sawf(state.phase1, state.waveIndex) * state.vol1;
 		const float signal_ = osc_softclipf(
 			.2f,
 			state.softclipAmt * signal);
 
 		/**************************/
-		
-		// Conversion de float à int 
+
+		// Conversion de float à int
 		yn[i] = f32_to_q31(signal_);
 
 		// Incrémentation et modulo de la phase
@@ -96,8 +96,8 @@ void OSC_NOTEOFF(const user_osc_param_t* const /*params*/)
 }
 
 void OSC_PARAM(const uint16_t index, const uint16_t value)
-{ 
-	switch (index) {    
+{
+	switch (index) {
 	case k_user_osc_param_shape:
 		state.vol0 = param_val_to_f32(value);
 		break;
@@ -105,16 +105,15 @@ void OSC_PARAM(const uint16_t index, const uint16_t value)
 		state.vol1 = param_val_to_f32(value);
 		break;
 	case k_user_osc_param_id1:
-		state.softclipAmt = value / 10.f;
+		state.softclipAmt = .5f + value / 10.f;
 		break;
 	case k_user_osc_param_id2:
 		state.octaveShift = value;
 		break;
 	case k_user_osc_param_id3:
-		state.sqrIdx = value;
+		state.waveIndex = value;
 		break;
 	default:
 		break;
 	}
 }
-

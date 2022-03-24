@@ -1,5 +1,5 @@
 {
-    "header" : 
+    "header" :
     {
         "platform" : "nutekt-digital",
         "module" : "osc",
@@ -7,15 +7,12 @@
         "dev_id" : 0,
         "prg_id" : 0,
         "version" : "0.1-0",
-        "name" : "Add",
-        "num_param" : 6,
+        "name" : "10ths",
+        "num_param" : 3,
         "params" : [
-            ["dist",    0, 100, ""],
+            ["dist",    0, 99, ""],
             ["octv",    -2, 2, ""],
-            ["tabl",    0, 6, ""],
-            ["vol",    0, 100, ""],
-            ["dummy4", -100, 100, "%"],
-            ["dummy5",    0, 10,  ""]            
+            ["Wvtb",      0,  6,  ""]
           ]
     }
 }
