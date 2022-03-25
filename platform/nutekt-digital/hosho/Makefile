@@ -12,7 +12,7 @@ else
     detected_OS := $(shell uname -s)
 endif
 
-PLATFORMDIR = ../..
+PLATFORMDIR = ..
 PROJECTDIR = .
 TOOLSDIR = $(PLATFORMDIR)/../../tools
 EXTDIR = $(PLATFORMDIR)/../ext
@@ -28,9 +28,7 @@ ZIP_ARGS = -r -m -q
 
 ifeq ($(OS),Windows_NT)
 ifneq ($(MSYSTEM), MSYS)
-ifneq ($(MSYSTEM), MINGW64)
   ZIP = $(TOOLSDIR)/zip/bin/zip
-endif
 endif
 endif
 
@@ -76,7 +74,7 @@ CXXOPT = -std=c++17 -fno-rtti -fno-exceptions -fno-non-call-exceptions
 LDOPT = -Xlinker --just-symbols=$(LDDIR)/osc_api.syms
 
 CWARN = -W -Wall -Wextra
-CXXWARN =
+CXXWARN = -W -Wall -Wextra
 
 FPU_OPTS = -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -fcheck-new
 
