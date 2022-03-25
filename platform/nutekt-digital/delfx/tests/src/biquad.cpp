@@ -3,8 +3,8 @@
  *
  * Simple execution environment test using provided biquad filters.
  *
- * 
- * 
+ *
+ *
  * 2018 (c) Korg
  *
  */
@@ -51,31 +51,31 @@ void DELFX_PROCESS(float *xn, uint32_t frames)
 {
   float * __restrict x = xn;
   const float * x_e = x + 2*frames;
-  
+
   const uint8_t type = s_type;
   const float wc = s_wc;
-  
+
   if (type != s_type_z
       || wc != s_wc_z) {
-    
+
     // type changed
     switch (type) {
     case k_polelp:
       s_bq_l.mCoeffs.setPoleLP(1.f - (wc*2.f));
       break;
-      
+
     case k_polehp:
       s_bq_l.mCoeffs.setPoleHP(wc*2.f);
       break;
-      
+
     case k_folp:
       s_bq_l.mCoeffs.setFOLP(fx_tanpif(wc));
       break;
-      
+
     case k_fohp:
       s_bq_l.mCoeffs.setFOHP(fx_tanpif(wc));
       break;
-      
+
     case k_foap:
       s_bq_l.mCoeffs.setFOAP(fx_tanpif(wc));
       break;
@@ -103,17 +103,17 @@ void DELFX_PROCESS(float *xn, uint32_t frames)
     case k_soap1:
       s_bq_l.mCoeffs.setSOAP1(fx_tanpif(wc), s_q);
       break;
-      
+
     default:
       break;
     }
 
     s_bq_r.mCoeffs = s_bq_l.mCoeffs;
-    
+
     s_type_z = type;
     s_wc_z = wc;
   }
-  
+
   for (; x != x_e; ) {
     // Note: normal effects would add to input buffer instead of replacing.
     *x = 0.25f*s_bq_l.process_so(*x);
@@ -142,4 +142,3 @@ void DELFX_PARAM(uint8_t index, int32_t value)
     break;
   }
 }
-

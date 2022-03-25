@@ -1,0 +1,19 @@
+{
+    "header" :
+    {
+        "platform" : "nutekt-digital",
+        "module" : "osc",
+        "api" : "1.1-0",
+        "dev_id" : 0,
+        "prg_id" : 0,
+        "version" : "0.1-0",
+        "name" : "10ths",
+        "num_param" : 4,
+        "params" : [
+            ["dist",    0, 99, ""],
+            ["octv",    -2, 2, ""],
+            ["Wvtb",      0,  6,  ""],
+            ["Cut",      0,  99,  ""]
+          ]
+    }
+}
