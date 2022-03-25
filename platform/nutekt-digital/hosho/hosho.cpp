@@ -190,7 +190,7 @@ void OSC_CYCLE(
 }
 
 void OSC_NOTEON(
-  const user_osc_param_t* const params)
+  const user_osc_param_t* const /*params*/)
 {
   constexpr auto rng_buffers_max = std::tuple_size<RngBuffers>::value;
   constexpr auto rng_buffer_max = std::tuple_size<RngBuffers::value_type>::value;
@@ -210,7 +210,7 @@ void OSC_NOTEON(
 }
 
 void OSC_NOTEOFF(
-  const user_osc_param_t* const params)
+  const user_osc_param_t* const /*params*/)
 {
   // state.vol0 = 0.f;
 }
