@@ -49,10 +49,10 @@ def make_padded(pps, xxs, dxs):
     return pps_, xxs_, dxs_
     # segment for segment in make_padded_pairs()]
 
-def plot_string(ax, pps, xxs, dxs, line_color=None, label=None):
+def plot_string(ax, pps, xxs, dxs, line_color=None, cmap=None, label=None):
     pps_, xxs_, dxs_ = make_padded(pps, xxs, dxs)
     ln, = ax.plot(pps_, xxs_, color=line_color, label=label, zorder=0)
-    sc = ax.scatter(pps_, xxs_, c=dxs_, cmap="viridis")
+    sc = ax.scatter(pps_, xxs_, c=dxs_, cmap=cmap)
     return ln, sc
 
 def plot_step_sequence(nframe=10):
@@ -77,13 +77,14 @@ plot_step_sequence()
 
 yys = zzs.copy()
 dys = dzs.copy()
-def run_animation(dt=20e-3):
+def run_animation(dt=20e-3, cmap="coolwarm"):
     fig = figure()
     axe = fig.subplots()
-    line, sca = plot_string(axe, pps, yys, dys)
-    colorbar(sca, ax=axe)
+    line, sca = plot_string(axe, pps, yys, dys, cmap=cmap)
     axe.set_xlim(-.2, 1.2)
     axe.set_ylim(-1.2, 1.2)
+    colorbar(sca, ax=axe)
+
     def init():
         return line, sca
 
@@ -93,7 +94,7 @@ def run_animation(dt=20e-3):
         yys, dys = run_steps(yys, dys, 64, dt)
         pps_, yys_, dys_ = make_padded(pps, yys, dys)
         line.set_data(pps_, yys_)
-        sca = axe.scatter(pps_, yys_, c=dys_, cmap="coolwarm")
+        sca = axe.scatter(pps_, yys_, c=dys_, cmap=cmap)
         return line, sca
 
     return FuncAnimation(fig, \
