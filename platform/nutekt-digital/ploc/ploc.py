@@ -88,30 +88,36 @@ def plot_step_sequence(pps, iis, dis, indices, nframe):
     axe.vlines([pps[index] for index in indices], -1, 1, colors, "dashed")
     axe.legend()
 
-def energy_stretch(aas, das, dt):
-    return norm(aas, 2)
+
+def energy_stretch(xxs, dxs, dp, dt, cc):
+    xxs_ = concatenate([(0.,), xxs, (0.,)])
+    foo = xxs[:-1] - xxs[1:]
+    return norm(foo, 2)
 
 yys = array([])
 dys = array([])
 samples = []
+
 energy_datas = [
     ("en stretch", energy_stretch),
-    ("en speed", lambda aas, das, dt: norm(das / dt, 2)),
+    ("en speed", lambda aas, das, dp, dt, cc: norm(das / dt / cc, 2)),
+    ("en tot", lambda aas, das, dp, dt, cc: energy_stretch(aas, das, dp, dt, cc) + norm(das / dt / cc, 2))
 ]
 energies = []
-def push_samples_at_positions(aas, das, dt):
+def push_samples_at_positions(aas, das, dp, dt, cc):
     samples.append([aas[index] for index in indices])
-    energies.append([make_energy(aas, das, dt) for label_energy, make_energy in energy_datas])
+    energies.append([make_energy(aas, das, dp, dt, cc) for label_energy, make_energy in energy_datas])
 
-def run_animation(pps, iis, dis, dt, cmap):
+def run_animation(pps, iis, dis, dt, cc, cmap):
     global yys, dys
+    dp = pps[1] - pps[0]
     yys = iis.copy()
     dys = dis.copy()
     samples.clear()
     fig = figure(figsize=(6.4, 8.8))
     axe, axe_, axe__ = fig.subplots(3, 1)
     line, sca = plot_string(axe, pps, yys, dys, cmap=cmap)
-    push_samples_at_positions(yys, dys, dt)
+    push_samples_at_positions(yys, dys, dp, dt, cc)
 
     colorbar(sca, ax=axe)
     axe.set_xlim(-.2, 1.2)
@@ -119,6 +125,7 @@ def run_animation(pps, iis, dis, dt, cmap):
     axe_.set_xlim(0, 1)
     axe_.set_ylim(-1.2, 1.2)
     axe__.set_xlim(0, 1)
+    axe__.set_ylim(0, 4)
 
     lines_ = []
     for kk, index in enumerate(indices):
@@ -148,11 +155,11 @@ def run_animation(pps, iis, dis, dt, cmap):
         inf_norm_yys = norm(yys, np.inf)
         zero_norm_yys = norm(yys, 0)
         print(f"frame {frame:04d} norm_yys euc {euc_norm_yys:.4f} inf {inf_norm_yys:.4f} zero {zero_norm_yys:.4f}")
-        yys, dys = run_steps(.8, yys, dys, 64, dt, laplace_ope)
+        yys, dys = run_steps(cc, yys, dys, 64, dt, laplace_ope)
         pps_, yys_, dys_ = make_padded(pps, yys, dys)
         line.set_data(pps_, yys_)
         sca = axe.scatter(pps_, yys_, c=dys_, cmap=cmap)
-        push_samples_at_positions(yys, dys, dt)
+        push_samples_at_positions(yys, dys, dp, dt, cc)
 
         for kk, line_ in enumerate(lines_):
             values = array([sample[kk] for sample in samples])
@@ -179,6 +186,6 @@ zzs = exp(pow((positions - mu) / sigma, 2) / -2)
 dzs = zeros_like(zzs, dtype=float)
 
 plot_step_sequence(positions, zzs, dzs, indices, 10)
-ani = run_animation(positions, zzs, dzs, 20e-3, "coolwarm")
+ani = run_animation(positions, zzs, dzs, dt=20e-3, cc=.8, cmap="coolwarm")
 
 show()
