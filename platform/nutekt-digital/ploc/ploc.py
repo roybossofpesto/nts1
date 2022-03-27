@@ -4,29 +4,23 @@ from pylab import *
 from matplotlib.collections import LineCollection
 from matplotlib.animation import FuncAnimation
 
-pps = linspace(0., 1., 32)
-# ys = zeros_like(pps, dtype=float)
-# ys[3 * xs.size // 4] = 1
+def make_laplace_ope(pps):
+    minus_laplace_ope = 2 * eye(pps.size, pps.size, 0)
+    minus_laplace_ope -= eye(pps.size, pps.size, 1)
+    minus_laplace_ope -= eye(pps.size, pps.size, -1)
 
-mu = .3
-sigma = .05
-zzs = exp(pow((pps - mu) / sigma, 2) / -2)
-dzs = zeros_like(zzs, dtype=float)
+    # print(minus_laplace_ope)
+    # print(matrix_rank(minus_laplace_ope), pps.size)
+    assert matrix_rank(minus_laplace_ope) == pps.size
 
-minus_laplace_ope = 2 * eye(pps.size, pps.size, 0)
-minus_laplace_ope -= eye(pps.size, pps.size, 1)
-minus_laplace_ope -= eye(pps.size, pps.size, -1)
+    inv_minus_laplace_ope = inv(minus_laplace_ope)
+    # print(inv_minus_laplace_ope)
 
-print(minus_laplace_ope)
-print(matrix_rank(minus_laplace_ope), pps.size)
+    dp = pps[1] - pps[0]
+    laplace_ope = -minus_laplace_ope / dp /dp
+    return laplace_ope
 
-inv_minus_laplace_ope = inv(minus_laplace_ope)
-print(inv_minus_laplace_ope)
-
-dx = pps[1] - pps[0]
-laplace_ope = -minus_laplace_ope / dx / dx
-
-def run_steps(cc, xxs, dxs, nstep, dt_):
+def run_steps(cc, xxs, dxs, nstep, dt_, laplace_ope):
     # cc propagation speed in unit / second
     # dt_ in second
     assert nstep > 0
@@ -56,20 +50,20 @@ def plot_string(ax, pps, xxs, dxs, line_color=None, cmap=None, label=None):
     sc = ax.scatter(pps_, xxs_, c=dxs_, cmap=cmap)
     return ln, sc
 
-positions = [len(pps) // 4, 2 * len(pps) // 4 , 3 * len(pps) // 4]
-def plot_step_sequence(nframe=10):
-    steps = [(zzs, dzs)]
-
+def plot_step_sequence(pps, iis, dis, indices, nframe):
+    indices = [len(pps) // 4, 2 * len(pps) // 4 , 3 * len(pps) // 4]
+    steps = [(iis, dis)]
+    laplace_ope = make_laplace_ope(pps)
     samples = []
     def push_samples_at_positions():
         aas, das = steps[-1]
-        samples.append([aas[index] for index in positions])
+        samples.append([aas[index] for index in indices])
         assert len(steps) == len(samples)
     push_samples_at_positions()
     while len(steps) < nframe:
         aas, das = steps[-1]
-        print(f"** {len(steps)} {aas.shape} {das.shape}")
-        bbs, dbs = run_steps(.2, aas, das, 256, 100e-3)
+        print(f"seq {len(steps)}/{nframe} {aas.shape} {das.shape}")
+        bbs, dbs = run_steps(.2, aas, das, 256, 100e-3, laplace_ope)
         steps.append((bbs, dbs))
         push_samples_at_positions()
     samples = array(samples)
@@ -84,71 +78,107 @@ def plot_step_sequence(nframe=10):
     axe.set_ylim(-1.2, 1.2)
 
     colors = []
-    for kk, index in enumerate(positions):
+    for kk, index in enumerate(indices):
         line_, = axe_.plot(samples[:, kk], label=f"p={pps[index]:.02f}")
         colors.append(line_.get_color())
     axe_.legend()
     axe_.set_xlim(-.2, 1.2)
     axe_.set_ylim(-1.2, 1.2)
 
-    axe.vlines([pps[index] for index in positions], -1, 1, colors, "dashed")
+    axe.vlines([pps[index] for index in indices], -1, 1, colors, "dashed")
     axe.legend()
-plot_step_sequence()
 
-yys = zzs.copy()
-dys = dzs.copy()
+def energy_stretch(aas, das, dt):
+    return norm(aas, 2)
+
+yys = array([])
+dys = array([])
 samples = []
-def push_samples_at_positions(aas, das):
-    samples.append([aas[index] for index in positions])
+energy_datas = [
+    ("en stretch", energy_stretch),
+    ("en speed", lambda aas, das, dt: norm(das / dt, 2)),
+]
+energies = []
+def push_samples_at_positions(aas, das, dt):
+    samples.append([aas[index] for index in indices])
+    energies.append([make_energy(aas, das, dt) for label_energy, make_energy in energy_datas])
 
-def run_animation(dt=20e-3, cmap="coolwarm"):
-    fig = figure(figsize=(6.4, 6.8))
-    axe, axe_ = fig.subplots(2, 1)
+def run_animation(pps, iis, dis, dt, cmap):
+    global yys, dys
+    yys = iis.copy()
+    dys = dis.copy()
+    samples.clear()
+    fig = figure(figsize=(6.4, 8.8))
+    axe, axe_, axe__ = fig.subplots(3, 1)
     line, sca = plot_string(axe, pps, yys, dys, cmap=cmap)
-    push_samples_at_positions(yys, dys)
+    push_samples_at_positions(yys, dys, dt)
 
     colorbar(sca, ax=axe)
     axe.set_xlim(-.2, 1.2)
     axe.set_ylim(-1.2, 1.2)
     axe_.set_xlim(0, 1)
     axe_.set_ylim(-1.2, 1.2)
+    axe__.set_xlim(0, 1)
 
     lines_ = []
-    for kk, index in enumerate(positions):
+    for kk, index in enumerate(indices):
         values = array([sample[kk] for sample in samples])
         line_, = axe_.plot(linspace(0., 1., len(values)), values, label=f"p={pps[index]:.02f}")
         lines_.append(line_)
     axe_.legend()
 
-    axe.vlines([pps[index] for index in positions], -1, 1, [line_.get_color() for line_ in lines_], "dashed")
+    lines__ = []
+    for kk, (label_energy, make_energy) in enumerate(energy_datas):
+        values = array([energy[kk] for energy in energies])
+        line__, = axe__.plot(linspace(0., 1., len(values)), values, label=label_energy)
+        lines__.append(line__)
+    axe__.legend()
+
+    axe.vlines([pps[index] for index in indices], -1, 1, [line_.get_color() for line_ in lines_], "dashed")
     # axe.legend()
+
+    laplace_ope = make_laplace_ope(pps)
 
     def init():
         return line, sca
 
     def update(frame):
         global yys, dys
-        log_euc_norm_yys = log10(norm(yys, 2.))
-        log_inf_norm_yys = log10(norm(yys, np.inf))
-        log_zero_norm_yys = log10(norm(yys, 0))
-        print(f"frame {frame:04d} log_norm_yys euc {log_euc_norm_yys:.4f} inf {log_inf_norm_yys:.4f} zero {log_zero_norm_yys:.4f}")
-        yys, dys = run_steps(.8, yys, dys, 64, dt)
+        euc_norm_yys = norm(yys, 2.)
+        inf_norm_yys = norm(yys, np.inf)
+        zero_norm_yys = norm(yys, 0)
+        print(f"frame {frame:04d} norm_yys euc {euc_norm_yys:.4f} inf {inf_norm_yys:.4f} zero {zero_norm_yys:.4f}")
+        yys, dys = run_steps(.8, yys, dys, 64, dt, laplace_ope)
         pps_, yys_, dys_ = make_padded(pps, yys, dys)
         line.set_data(pps_, yys_)
         sca = axe.scatter(pps_, yys_, c=dys_, cmap=cmap)
-        push_samples_at_positions(yys, dys)
+        push_samples_at_positions(yys, dys, dt)
 
         for kk, line_ in enumerate(lines_):
             values = array([sample[kk] for sample in samples])
             line_.set_data(linspace(0., 1., len(values)), values)
 
-        return [line, sca] + lines_
+        for kk, line__ in enumerate(lines__):
+            values = array([energy[kk] for energy in energies])
+            line__.set_data(linspace(0., 1., len(values)), values)
+
+        return [line, sca] + lines_ + lines__
 
     return FuncAnimation(fig, \
         update, \
         init_func = init, \
         interval = dt * 1000,
         blit = True)
-ani = run_animation()
+
+positions = linspace(0., 1., 32)
+indices = [len(positions) // 4, 2 * len(positions) // 4 , 3 * len(positions) // 4]
+
+mu = .3
+sigma = .05
+zzs = exp(pow((positions - mu) / sigma, 2) / -2)
+dzs = zeros_like(zzs, dtype=float)
+
+plot_step_sequence(positions, zzs, dzs, indices, 10)
+ani = run_animation(positions, zzs, dzs, 20e-3, "coolwarm")
 
 show()
