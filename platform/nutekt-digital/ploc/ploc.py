@@ -50,7 +50,7 @@ def plot_string(ax, pps, xxs, dxs, line_color=None, cmap=None, label=None):
     sc = ax.scatter(pps_, xxs_, c=dxs_, cmap=cmap)
     return ln, sc
 
-def plot_step_sequence(pps, iis, dis, indices, nframe):
+def plot_step_sequence(pps, iis, dis, indices, nframe, cc):
     indices = [len(pps) // 4, 2 * len(pps) // 4 , 3 * len(pps) // 4]
     steps = [(iis, dis)]
     laplace_ope = make_laplace_ope(pps)
@@ -63,10 +63,11 @@ def plot_step_sequence(pps, iis, dis, indices, nframe):
     while len(steps) < nframe:
         aas, das = steps[-1]
         print(f"seq {len(steps)}/{nframe} {aas.shape} {das.shape}")
-        bbs, dbs = run_steps(.2, aas, das, 256, 100e-3, laplace_ope)
+        bbs, dbs = run_steps(cc, aas, das, 256, 100e-3, laplace_ope)
         steps.append((bbs, dbs))
         push_samples_at_positions()
     samples = array(samples)
+    print(f"got {samples.shape[0]} samples {samples.shape}")
 
     fig = figure(figsize=(6.4, 6.8))
     axe, axe_ = fig.subplots(2, 1)
@@ -79,10 +80,10 @@ def plot_step_sequence(pps, iis, dis, indices, nframe):
 
     colors = []
     for kk, index in enumerate(indices):
-        line_, = axe_.plot(samples[:, kk], label=f"p={pps[index]:.02f}")
+        line_, = axe_.plot(linspace(0., 1., samples.shape[0]), samples[:, kk], ls="-", marker="+", label=f"p={pps[index]:.02f}")
         colors.append(line_.get_color())
     axe_.legend()
-    axe_.set_xlim(-.2, 1.2)
+    axe_.set_xlim(0, 1)
     axe_.set_ylim(-1.2, 1.2)
 
     axe.vlines([pps[index] for index in indices], -1, 1, colors, "dashed")
@@ -92,7 +93,12 @@ def plot_step_sequence(pps, iis, dis, indices, nframe):
 def energy_stretch(xxs, dxs, dp, dt, cc):
     xxs_ = concatenate([(0.,), xxs, (0.,)])
     foo = xxs[:-1] - xxs[1:]
-    return norm(foo, 2)
+    return pow(abs(foo), 2).sum() / dp
+
+def energy_speed(xxs, dxs, dp, dt, cc):
+    # print(1/dt)
+    foo = dxs / dt / cc
+    return pow(abs(foo), 2).sum() * dp * 4000. / 64 * 200
 
 yys = array([])
 dys = array([])
@@ -100,8 +106,8 @@ samples = []
 
 energy_datas = [
     ("en stretch", energy_stretch),
-    ("en speed", lambda aas, das, dp, dt, cc: norm(das / dt / cc, 2)),
-    ("en tot", lambda aas, das, dp, dt, cc: energy_stretch(aas, das, dp, dt, cc) + norm(das / dt / cc, 2))
+    ("en speed", energy_speed),
+    ("en tot", lambda aas, das, dp, dt, cc: energy_stretch(aas, das, dp, dt, cc) + energy_speed(aas, das, dp, dt, cc))
 ]
 energies = []
 def push_samples_at_positions(aas, das, dp, dt, cc):
@@ -125,7 +131,7 @@ def run_animation(pps, iis, dis, dt, cc, cmap):
     axe_.set_xlim(0, 1)
     axe_.set_ylim(-1.2, 1.2)
     axe__.set_xlim(0, 1)
-    axe__.set_ylim(0, 4)
+    axe__.set_ylim(0, 20)
 
     lines_ = []
     for kk, index in enumerate(indices):
@@ -155,7 +161,7 @@ def run_animation(pps, iis, dis, dt, cc, cmap):
         inf_norm_yys = norm(yys, np.inf)
         zero_norm_yys = norm(yys, 0)
         print(f"frame {frame:04d} norm_yys euc {euc_norm_yys:.4f} inf {inf_norm_yys:.4f} zero {zero_norm_yys:.4f}")
-        yys, dys = run_steps(cc, yys, dys, 64, dt, laplace_ope)
+        yys, dys = run_steps(cc, yys, dys, 200, dt, laplace_ope)
         pps_, yys_, dys_ = make_padded(pps, yys, dys)
         line.set_data(pps_, yys_)
         sca = axe.scatter(pps_, yys_, c=dys_, cmap=cmap)
@@ -177,15 +183,20 @@ def run_animation(pps, iis, dis, dt, cc, cmap):
         interval = dt * 1000,
         blit = True)
 
-positions = linspace(0., 1., 32)
-indices = [len(positions) // 4, 2 * len(positions) // 4 , 3 * len(positions) // 4]
+positions = linspace(0., 1., 256)
 
 mu = .3
 sigma = .05
 zzs = exp(pow((positions - mu) / sigma, 2) / -2)
 dzs = zeros_like(zzs, dtype=float)
 
-plot_step_sequence(positions, zzs, dzs, indices, 10)
-ani = run_animation(positions, zzs, dzs, dt=20e-3, cc=.8, cmap="coolwarm")
+indices = [len(positions) // 4, 2 * len(positions) // 4 , 3 * len(positions) // 4]
+plot_step_sequence(positions, zzs, dzs, indices, cc=.25, nframe=20)
+plot_step_sequence(positions, zzs, dzs, indices, cc=.5, nframe=10)
+
+# ani = run_animation(positions, zzs, dzs, dt=20e-3, cc=.25, cmap="coolwarm")
+# ani = run_animation(positions, zzs, dzs, dt=20e-3, cc=1., cmap="coolwarm")
+ani_ = run_animation(positions, zzs, dzs, dt=20e-3, cc=2., cmap="coolwarm")
+# ani_ = run_animation(positions, zzs, dzs, dt=20e-3, cc=.5, cmap="coolwarm")
 
 show()
