@@ -32,7 +32,7 @@ void OSC_CYCLE(
 {
 	// Calcul de l'incrément de phase correspondant au pitch de l'oscillateur
 	const uint8_t notePitch = 12 * state.octaveShift + (params->pitch >> 8);
-	const uint8_t modWheel = params->pitch & 0xFF;
+	const uint8_t pitchBend = params->pitch & 0xFF;
 
 	float w0 = 0.f;
 	float w1 = 0.f;
@@ -40,32 +40,32 @@ void OSC_CYCLE(
 	case 0:
 	case 5:
 	case 7:
-		w0 = osc_w0f_for_note(notePitch, modWheel);
-		w1 = osc_w0f_for_note(notePitch + 16, modWheel);
+		w0 = osc_w0f_for_note(notePitch, pitchBend);
+		w1 = osc_w0f_for_note(notePitch + 16, pitchBend);
 		break;
 	case 2:
 	case 4:
 	case 9:
-		w0 = osc_w0f_for_note(notePitch, modWheel);
-		w1 = osc_w0f_for_note(notePitch + 15, modWheel);
+		w0 = osc_w0f_for_note(notePitch, pitchBend);
+		w1 = osc_w0f_for_note(notePitch + 15, pitchBend);
 		break;
 	case 11:
-		w0 = osc_w0f_for_note(notePitch, modWheel);
-		w1 = osc_w0f_for_note(notePitch + 15, modWheel);
+		w0 = osc_w0f_for_note(notePitch, pitchBend);
+		w1 = osc_w0f_for_note(notePitch + 15, pitchBend);
 		break;
 	case 1:
 	case 6:
 	case 8:
-		w0 = osc_w0f_for_note(notePitch - 1, modWheel);
-		w1 = osc_w0f_for_note(notePitch - 1 + 19, modWheel);
+		w0 = osc_w0f_for_note(notePitch - 1, pitchBend);
+		w1 = osc_w0f_for_note(notePitch - 1 + 19, pitchBend);
 		break;
 	case 3:
-		w0 = osc_w0f_for_note(notePitch - 1, modWheel);
-		w1 = osc_w0f_for_note(notePitch - 1 + 19, modWheel);
+		w0 = osc_w0f_for_note(notePitch - 1, pitchBend);
+		w1 = osc_w0f_for_note(notePitch - 1 + 19, pitchBend);
 		break;
 	case 10:
-		w0 = osc_w0f_for_note(notePitch - 1, modWheel);
-		w1 = osc_w0f_for_note(notePitch - 1 + 19, modWheel);
+		w0 = osc_w0f_for_note(notePitch - 1, pitchBend);
+		w1 = osc_w0f_for_note(notePitch - 1 + 19, pitchBend);
 		break;
 	}
 
