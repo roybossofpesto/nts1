@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python3
 
 from pylab import *
 from matplotlib.collections import LineCollection
