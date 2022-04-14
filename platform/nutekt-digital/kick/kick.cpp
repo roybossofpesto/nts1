@@ -51,6 +51,17 @@ float get_pitch_env(
     expf((time - attack) / -release));
 }
 
+float get_volume_env(
+  const float time,
+  const float sustain,
+  const float release)
+{
+  return
+    time < 0 ? 0 :
+    time < sustain ? 1 :
+    expf((time - sustain) / -release);
+}
+
 void OSC_CYCLE(
   const user_osc_param_t* const params,
   int32_t* yy_,
@@ -69,8 +80,12 @@ void OSC_CYCLE(
       state.attack,
       state.release,
       state.intensity);
+    const float volume_env = get_volume_env(
+      state.time,
+      state.attack + 3 * state.release,
+      35e-3);
     const float ww = w0 * powf(2.f, pitch_env / 12.f);
-    const float sig_master = osc_sinf(state.osc0.phi);
+    const float sig_master = volume_env * osc_sinf(state.osc0.phi);
 
     *yy = f32_to_q31(sig_master);
 
