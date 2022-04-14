@@ -6,20 +6,33 @@
 #include <cstdlib>
 #include <tuple>
 
-#include "mersenne.h"
-
 using namespace std::literals::chrono_literals;
 
+using Note = uint8_t;
+
+struct Osc {
+  float phi = 0.f;
+  void update(const float ww);
+};
+
+void Osc::update(const float ww)
+{
+  phi += ww;
+  phi -= static_cast<uint32_t>(phi);
+}
+
+struct State {
+  size_t index = 0;
+  float time = 0.f;
+  Osc osc0;
+  // Osc osc1;
+};
+
+static State state;
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
-
-  { // reseed rng_buffers
-    for (auto& rng_buffer : rng_buffers)
-      for (auto& rng_value : rng_buffer)
-        rng_value = rng.uniform();
-  }
 }
 
 void OSC_CYCLE(
@@ -27,6 +40,22 @@ void OSC_CYCLE(
   int32_t* yy_,
   const uint32_t frames)
 {
+  const Note in_note = (params->pitch >> 8) % 152;
+
+  const auto w0 = osc_w0f_for_note(in_note, 0);
+
+  auto yy = static_cast<q31_t*>(yy_);
+  auto yy_end = yy + frames;
+  float sig_hosho = 0.f;
+  for (; yy < yy_end; yy++) {
+    const float sig_master = osc_sinf(state.osc0.phi);
+
+    *yy = f32_to_q31(sig_master);
+
+    state.time += k_samplerate_recipf;
+    state.osc0.update(w0);
+    // state.osc1.update(w1);
+  }
 }
 
 
@@ -36,10 +65,7 @@ void OSC_NOTEON(
   state.index ++;
 
   if (state.index >= 4) {
-    state.index = 0;
-    state.time = 0;
-    state.phi0 = 0;
-    state.phi1 = 0;
+    state = State();
   }
 }
 
