@@ -30,6 +30,7 @@ struct State {
   float attack = 10e-3;
   float release = 100e-3;
   float intensity = 48;
+  size_t time_signature = 4;
 };
 
 static State state;
@@ -100,7 +101,7 @@ void OSC_NOTEON(
   const user_osc_param_t* const /*params*/)
 {
   state.index ++;
-  state.index %= 4;
+  state.index %= state.time_signature;
 
   if (state.index == 0) {
     // state.osc0 = Osc(); // uncomment to add click
@@ -125,6 +126,9 @@ void OSC_PARAM(uint16_t index, uint16_t value)
       break;
     case k_user_osc_param_id1:  /* Attack */
       state.attack = value * 1e-3;
+      break;
+    case k_user_osc_param_id2:  /* 4:4 or 3:4 time signature */
+      state.time_signature = value;
       break;
   }
 }
