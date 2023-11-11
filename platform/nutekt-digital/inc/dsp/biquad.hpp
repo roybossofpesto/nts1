@@ -52,9 +52,9 @@ namespace dsp {
    * Transposed form 2 Bi-Quad construct for FIR/IIR filters.
    */
   struct BiQuad {
-    
+
     // Transposed Form 2
-    
+
     /*=====================================================================*/
     /* Types and Data Structures.                                          */
     /*=====================================================================*/
@@ -68,7 +68,7 @@ namespace dsp {
       float ff2;
       float fb1;
       float fb2;
-      
+
       /**
        * Default constructor
        */
@@ -89,7 +89,7 @@ namespace dsp {
       float wc(const float fc, const float fsrecip) {
         return fc * fsrecip;
       }
-      
+
       // -- Filter types -----------------------
 
       /**
@@ -317,7 +317,7 @@ namespace dsp {
        * Calculate coefficients for second order all pass filter.
        *
        * @param   delta cos(2pi*wc)
-       * @param   radius 
+       * @param   radius
        *
        * @note Another alternative implementation.
        */
@@ -331,9 +331,9 @@ namespace dsp {
         ff1 = fb1 = a1;
         ff2 = 1.f;
       }
-        
+
     } Coeffs;
-      
+
     /*=====================================================================*/
     /* Constructor / Destructor.                                           */
     /*=====================================================================*/
@@ -343,7 +343,7 @@ namespace dsp {
      */
     BiQuad(void) : mZ1(0), mZ2(0)
     { }
-      
+
     /*=====================================================================*/
     /* Public Methods.                                                     */
     /*=====================================================================*/
@@ -399,14 +399,14 @@ namespace dsp {
     float process(const float xn) {
       return process_so(xn);
     }
-      
+
     /*=====================================================================*/
     /* Member Variables.                                                   */
     /*=====================================================================*/
 
     /** Coefficients for the Bi-Quad construct */
     Coeffs mCoeffs;
-    float mZ1, mZ2;      
+    float mZ1, mZ2;
   };
 
   /**
@@ -414,11 +414,11 @@ namespace dsp {
    */
   struct ExtBiQuad {
     // Extended BiQuad structure
-      
+
     /*=====================================================================*/
     /* Types and Data Structures.                                          */
     /*=====================================================================*/
-            
+
     /*=====================================================================*/
     /* Constructor / Destructor.                                           */
     /*=====================================================================*/
@@ -431,7 +431,7 @@ namespace dsp {
       mD0(0), mD1(0),
       mW0(0), mW1(0)
     { }
-      
+
     /*=====================================================================*/
     /* Public Methods.                                                     */
     /*=====================================================================*/
@@ -538,7 +538,7 @@ namespace dsp {
     }
 
     // -- All-Pass based Low/High Shelf -----------------
-    
+
     /**
      * Calculate coefficients for first order all pass based low shelf filter.
      *
@@ -557,7 +557,7 @@ namespace dsp {
 
       mW0 = 1.f;
       mD0 = 1.f;
-        
+
       mW1 = 0.5f * h;
       mD1 = 1.f;
     }
@@ -580,13 +580,13 @@ namespace dsp {
 
       mW0 = -1.f;
       mD0 = 1.f;
-        
+
       mW1 = 0.5f * h;
       mD1 = 1.f;
     }
 
     // TODO: second order shelves
-      
+
     // -- All-Pass based Band Pass/Reject -------------
     /**
      * Calculate coefficients for second order all pass based band reject filter.
@@ -620,16 +620,16 @@ namespace dsp {
     inline __attribute__((optimize("Ofast"),always_inline))
     void setSOAPBP2(const float delta, const float gamma) {
       // Alternative implementation based on second order tunable all pass
-      // delta = cos(2pi*wc) 
+      // delta = cos(2pi*wc)
       mCoeffs.setSOAP2(delta, gamma);
-        
+
       mW0 = -1.f;
       mD0 = 1.f;
-        
+
       mW1 = 0.5f;
       mD1 = 0.f;
     }
-      
+
     // -- All-Pass based Peak/Notch -------------
     /**
      * Calculate coefficients for second order all pass based peak/notch filter.
@@ -647,30 +647,30 @@ namespace dsp {
 
       const float h = gain - 1.f;
       const float g = (gain >=  1.f) ? 1.f : gain;
-        
+
       const float c = (gamma - g) / (gamma + g);
       const float d = -delta;
-        
+
       mCoeffs.ff0 = mCoeffs.fb2 = -c;
       mCoeffs.ff1 = mCoeffs.fb1 = d * (1.f - c);
       mCoeffs.ff2 = 1.f;
-        
+
       mW0 = -1.f;
       mD0 = 1.f;
 
       mW1 = 0.5f * h;
       mD1 = 1.f;
     }
-      
+
     /*=====================================================================*/
     /* Member Variables.                                                   */
     /*=====================================================================*/
 
     /** Coefficients for the Bi-Quad construct */
-    BiQuad::Coeffs mCoeffs;
-    float mD0, mD1, mW0, mW1;
     float mZ1, mZ2;
-  };    
+    float mD0, mD1, mW0, mW1;
+    BiQuad::Coeffs mCoeffs;
+  };
 }
 
 /** @} */
