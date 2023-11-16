@@ -12,7 +12,7 @@ else
     detected_OS := $(shell uname -s)
 endif
 
-PLATFORMDIR = ../..
+PLATFORMDIR = ..
 PROJECTDIR = .
 TOOLSDIR = $(PLATFORMDIR)/../../tools
 EXTDIR = $(PLATFORMDIR)/../ext
