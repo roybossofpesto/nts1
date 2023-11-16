@@ -57,13 +57,13 @@ assert_success() {
     return 1
 }
 
-AWK=$(which awk) || assert_success "dependency not found..." || exit $?
+AWK=$(which awk) || assert_success "dependency AA not found..." || exit $?
 
-CURL=$(which curl) || assert_success "dependency not found..." || exit $?
+CURL=$(which curl) || assert_success "dependency BB not found..." || exit $?
 
-TAR=$(which tar) || assert_success "dependency not found..." || exit $?
+TAR=$(which tar) || assert_success "dependency CC not found..." || exit $?
 
-SHA1SUM=$(which sha1sum) || assert_success "dependency not found..." || exit $?
+SHA1SUM=$(which sha1sum) || assert_success "dependency DD not found..." || exit $?
 
 # test_sha1sum(sha1, path_to_file)
 test_sha1sum() {
