@@ -65,7 +65,7 @@ BIN  = $(CP) -O binary
 LDDIR = $(PROJECTDIR)/ld
 RULESPATH = $(LDDIR)
 LDSCRIPT = $(LDDIR)/userosc.ld
-DLIBS = -lm
+DLIBS = -lm 
 
 DADEFS = -DSTM32F446xE -DCORTEX_USE_FPU=TRUE -DARM_MATH_CM4
 DDEFS = -DSTM32F446xE -DCORTEX_USE_FPU=TRUE -DARM_MATH_CM4 -D__FPU_PRESENT
@@ -73,8 +73,7 @@ DDEFS = -DSTM32F446xE -DCORTEX_USE_FPU=TRUE -DARM_MATH_CM4 -D__FPU_PRESENT
 COPT = -std=c11 -mstructure-size-boundary=8
 CXXOPT = -std=c++17 -fno-rtti -fno-exceptions -fno-non-call-exceptions
 
-LDOPT = -Xlinker --just-symbols=$(LDDIR)/osc_api.syms
-
+LDOPT = -Xlinker --just-symbols=$(LDDIR)/osc_api.syms -specs=nano.specs 
 CWARN = -W -Wall -Wextra
 CXXWARN =
 
