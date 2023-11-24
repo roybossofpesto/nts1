@@ -1,28 +1,10 @@
 #include "userosc.h"
 
 #include <array>
-// #include <vector>
-// #include <map>
-// #include <cstdlib>
-
-// void *__dso_handle = 0;
-// void *_sbrk = 0;
-
-// void * operator new(std::size_t n)
-// {
-//   void * const p = std::malloc(n);
-//   // handle p == 0
-//   return p;
-// }
-
-// void operator delete(void * p) // or delete(void *, std::size_t)
-// {
-//   std::free(p);
-// }
 
 struct State
 {
-  static constexpr const size_t max_channels = 3;
+  static constexpr const size_t max_channels = 4;
 
   float disto_amount = 1.f;
   size_t wave_index = 0;
@@ -75,9 +57,10 @@ void OSC_CYCLE(
       params->pitch >> 8,
       params->pitch & 0xFF);
 
-  state.channels[0].dphi = 1.0 * dphi;
-  state.channels[1].dphi = .5f * dphi;
-  state.channels[2].dphi = .666f * dphi;
+  state.channels[0].dphi = 1.f / 1.f * dphi;
+  state.channels[1].dphi = 1.f / 2.f * dphi;
+  state.channels[2].dphi = 3.f / 4.f * dphi;
+  state.channels[3].dphi = 5.f / 4.f * dphi;
 
   auto yy = static_cast<q31_t *>(yy_);
   auto yy_end = yy + frames;
@@ -86,9 +69,14 @@ void OSC_CYCLE(
 
     // accumulate channel signals
     float sig = 0.f;
+    float vol = 0.f;
     for (const auto &channel : state.channels)
+    {
       sig += channel.volume * osc_wave_scanf(wave, channel.phi);
-    sig /= State::max_channels;
+      vol += channel.volume;
+    }
+    if (vol)
+      sig /= vol;
 
     // apply disto
     state.disto_amount = std::max(state.disto_amount, 1.f);
@@ -121,9 +109,11 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     break;
   case k_user_osc_param_shape:
   {
-    float aa = param_val_to_f32(value);
-    state.channels[1].volume = (aa < .5) ? (2 * aa) : 1;
-    state.channels[2].volume = (aa < .5) ? 0 : (2 * aa - 1);
+    float aa = param_val_to_f32(value) * 3;
+    state.channels[0].volume = 1;
+    state.channels[1].volume = (aa < 0) ? 0 : (aa < 1) ? (aa - 0) : 1;
+    state.channels[2].volume = (aa < 1) ? 0 : (aa < 2) ? (aa - 1) : 1;
+    state.channels[3].volume = (aa < 2) ? 0 : (aa < 3) ? (aa - 2) : 1;
   }
   break;
   case k_user_osc_param_shiftshape:
