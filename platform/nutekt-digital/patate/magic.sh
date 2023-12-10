@@ -14,8 +14,8 @@ else
   midi_inport="$( echo "${midi_dump}" | awk 'BEGIN { FS=":"; } /in:([0-9]+):/{ print $2; }' )"
   midi_outport="$( echo "${midi_dump}" | awk 'BEGIN { FS=":"; } /out:([0-9]+):/{ print $2; }' )"
   echo "midi inport '${midi_inport}' outport '${midi_outport}'"
-  if ! [[ ${midi_inport} =~ ^[0-9]+$ ]]; then echo "invalid midi in"; fi
-  if ! [[ ${midi_outport} =~ ^[0-9]+$ ]]; then echo "invalid midi outport"; fi
+  if ! [[ ${midi_inport} =~ ^[0-9]+$ ]]; then echo "invalid midi in"; exit 1; fi
+  if ! [[ ${midi_outport} =~ ^[0-9]+$ ]]; then echo "invalid midi outport"; exit 1; fi
 
   logue-cli probe --inport ${midi_inport} --outport ${midi_outport} -v
 
