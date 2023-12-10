@@ -4,11 +4,14 @@
 
 struct State
 {
-  static constexpr const size_t max_channels = 5;
+  static constexpr const size_t max_channels = 4;
 
   float shape_amount = 1.f;
   float shiftshape_amount = 1.f;
   size_t wave_index = 0;
+
+  size_t top_now = 0;
+  size_t top_last_noteon = 0;
 
   struct Channel
   {
@@ -18,8 +21,15 @@ struct State
   };
 
   std::array<Channel, max_channels> channels;
-  size_t top_now = 0;
-  size_t top_last_noteon = 0;
+
+  struct Drone
+  {
+    float frequency = 0.f;
+    float position = 0.f;
+    size_t top_next_rng = 0;
+  };
+
+  Drone drone;
 };
 
 static State state = State();
@@ -28,27 +38,28 @@ static custom::MersenneTwister rng = custom::MersenneTwister();
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
   state = State();
+  // rng = custom::MersenneTwister();
 }
 
-const float *get_wavetable(size_t index)
-{
-  switch (index % 6)
-  {
-  case 0:
-    return wavesA[0];
-  case 1:
-    return wavesB[0];
-  case 2:
-    return wavesC[0];
-  case 3:
-    return wavesD[0];
-  case 4:
-    return wavesE[0];
-  case 5:
-    return wavesF[0];
-  }
-  return wavesA[0];
-}
+// const float *get_wavetable(size_t index)
+// {
+//   switch (index % 6)
+//   {
+//   case 0:
+//     return wavesA[0];
+//   case 1:
+//     return wavesB[0];
+//   case 2:
+//     return wavesC[0];
+//   case 3:
+//     return wavesD[0];
+//   case 4:
+//     return wavesE[0];
+//   case 5:
+//     return wavesF[0];
+//   }
+//   return wavesA[0];
+// }
 
 void OSC_CYCLE(
     const user_osc_param_t *const params,
@@ -61,40 +72,42 @@ void OSC_CYCLE(
       params->pitch >> 8,
       params->pitch & 0xFF);
 
-  const auto note_rng = rng.uniform_uchar(45, 56);
-  const auto frequency_rng = osc_notehzf(note_rng);
-
-  // const float mask = state.shiftshape_amount < .5f ? 1.f : 0.f;
-
   state.channels[0].frequency = 1.f / 1.f * frequency_main;
   state.channels[1].frequency = 1.f / 2.f * frequency_main;
   state.channels[2].frequency = 2.f / 3.f * frequency_main;
   state.channels[3].frequency = 4.f / 5.f * frequency_main;
-  state.channels[4].frequency = frequency_rng;
+
+  if (state.drone.top_next_rng < state.top_now)
+  {
+    const auto note_rng = rng.uniform_uchar(120, 150);
+    state.drone.frequency = osc_w0f_for_note(note_rng, 0);
+    state.drone.top_next_rng = state.top_now + k_samplerate * 1.0f;
+  }
 
   auto yy = static_cast<q31_t *>(yy_);
   auto yy_end = yy + frames;
   for (; yy < yy_end; yy++)
   {
     const float delta = static_cast<float>(state.top_now - state.top_last_noteon) * k_samplerate_recipf;
-    const float release = exp(-delta / (state.shape_amount * .025f + .015f));
+    const float release = exp(-delta / (state.shape_amount * .075f + .015f));
 
     state.channels[0].volume = release;
     state.channels[1].volume = release;
     state.channels[2].volume = .5f * release;
     state.channels[3].volume = .25f * release;
-    state.channels[4].volume = state.shiftshape_amount;
 
     // accumulate channel signals
     float sig = 0.f;
     float vol = 0.f;
     for (const auto &channel : state.channels)
     {
-      // sig += channel.volume * osc_wave_scanf(wave, channel.position);
-      sig += channel.volume * osc_bl_sawf(channel.position, state.wave_index);
+      sig += channel.volume * osc_cosf(channel.position);
       vol += channel.volume;
     }
     sig /= state.channels.size();
+
+    // sig += channel.volume * osc_wave_scanf(wave, channel.position);
+    sig += state.shiftshape_amount * osc_bl_sawf(state.drone.position, state.wave_index);
 
     // // apply disto
     // state.disto_amount = std::max(state.disto_amount, 1.f);
@@ -104,6 +117,9 @@ void OSC_CYCLE(
 
     for (auto &channel : state.channels)
       channel.position += channel.frequency;
+
+    state.drone.position += state.drone.frequency;
+
     state.top_now += 1;
   }
 }
@@ -112,9 +128,9 @@ void OSC_NOTEON(
     const user_osc_param_t *const params)
 {
   state.channels[0].position = 0.f;
-  // state.channels[1].position = 0.f;
-  // state.channels[2].position = 0.f;
-  // state.channels[3].position = 0.f;
+  state.channels[1].position = 0.f;
+  state.channels[2].position = 0.f;
+  state.channels[3].position = 0.f;
   state.top_last_noteon = state.top_now;
 }
 
