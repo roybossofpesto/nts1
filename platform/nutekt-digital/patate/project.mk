@@ -6,9 +6,9 @@ PROJECT = patate
 
 UCSRC =
 
-UCXXSRC = patate.cpp custom.cpp
+UCXXSRC = custom/src/interp.cpp custom/src/mersenne.cpp patate.cpp 
 
-UINCDIR = common.h
+UINCDIR = custom/include
 
 UDEFS =
 

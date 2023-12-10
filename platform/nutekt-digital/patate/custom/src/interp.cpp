@@ -1,4 +1,4 @@
-#include "custom.h"
+#include <custom/interp.h>
 
 float custom::linearstep(const float left, const float right, const float xx)
 {

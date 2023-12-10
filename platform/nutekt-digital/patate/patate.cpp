@@ -1,21 +1,14 @@
 #include "userosc.h"
-#include "custom.h"
-
+#include <custom/mersenne.h>
 #include <array>
-#include <random>
 
 struct State
 {
   static constexpr const size_t max_channels = 5;
 
-  // using Rng = std::mt19937;
-  // using UniformUInt8 = std::uniform_int_distribution<uint8_t>;
-
   float shape_amount = 1.f;
   float shiftshape_amount = 1.f;
   size_t wave_index = 0;
-  // Rng rng = Rng(0x1234abcd);
-  // UniformUInt8 dist_note = UniformUInt8(64, 96);
 
   struct Channel
   {
@@ -30,6 +23,7 @@ struct State
 };
 
 static State state = State();
+static custom::MersenneTwister rng = custom::MersenneTwister();
 
 void OSC_INIT(uint32_t /*platform*/, uint32_t /*api*/)
 {
@@ -67,9 +61,8 @@ void OSC_CYCLE(
       params->pitch >> 8,
       params->pitch & 0xFF);
 
-  // const auto note_rng = state.dist_note(state.rng);
-  // const auto frequency_rng = osc_notehzf(note_rng);
-  const auto frequency_rng = frequency_main; // osc_notehzf(note_rng);
+  const auto note_rng = rng.uniform_uchar(45, 56);
+  const auto frequency_rng = osc_notehzf(note_rng);
 
   // const float mask = state.shiftshape_amount < .5f ? 1.f : 0.f;
 
