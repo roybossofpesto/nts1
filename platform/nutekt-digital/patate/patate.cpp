@@ -2,7 +2,7 @@
 #include "custom.h"
 
 #include <array>
-// #include <random>
+#include <random>
 
 struct State
 {
@@ -74,9 +74,9 @@ void OSC_CYCLE(
   // const float mask = state.shiftshape_amount < .5f ? 1.f : 0.f;
 
   state.channels[0].frequency = 1.f / 1.f * frequency_main;
-  state.channels[1].frequency = 1.f / 1.f * frequency_main;
-  state.channels[2].frequency = 3.f / 1.f * frequency_main;
-  state.channels[3].frequency = 5.f / 4.f * frequency_main;
+  state.channels[1].frequency = 1.f / 2.f * frequency_main;
+  state.channels[2].frequency = 2.f / 3.f * frequency_main;
+  state.channels[3].frequency = 4.f / 5.f * frequency_main;
   state.channels[4].frequency = frequency_rng;
 
   auto yy = static_cast<q31_t *>(yy_);
@@ -84,12 +84,12 @@ void OSC_CYCLE(
   for (; yy < yy_end; yy++)
   {
     const float delta = static_cast<float>(state.top_now - state.top_last_noteon) * k_samplerate_recipf;
-    const float release = exp(-delta / (state.shape_amount * .1 + .025f));
+    const float release = exp(-delta / (state.shape_amount * .025f + .015f));
 
     state.channels[0].volume = release;
     state.channels[1].volume = release;
-    state.channels[2].volume = release;
-    state.channels[3].volume = release;
+    state.channels[2].volume = .5f * release;
+    state.channels[3].volume = .25f * release;
     state.channels[4].volume = state.shiftshape_amount;
 
     // accumulate channel signals
