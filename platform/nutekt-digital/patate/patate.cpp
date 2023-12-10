@@ -74,8 +74,8 @@ void OSC_CYCLE(
       params->pitch & 0xFF);
 
   state.channels[0].frequency = 1.f / 1.f * frequency_main;
-  state.channels[1].frequency = 1.f / 2.f * frequency_main;
-  state.channels[2].frequency = 3.f / 2.f * frequency_main;
+  state.channels[1].frequency = 3.f / 2.f * frequency_main;
+  state.channels[2].frequency = 1.f / 2.f * frequency_main;
   state.channels[3].frequency = 5.f / 4.f * frequency_main;
 
   // if (state.drone.top_next_rng < state.top_now)

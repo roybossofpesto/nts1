@@ -6,7 +6,7 @@
         "api" : "1.1-0",
         "dev_id" : 0,
         "prg_id" : 0,
-        "version" : "5.0-0",
+        "version" : "6.0-0",
         "name" : "patate",
         "num_param" : 1,
         "params" : [
